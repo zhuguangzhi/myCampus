@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/Login/Index",
+    "pages/Leave/Leave",
+    "pages/Dynamic/Dynamic",
+    "pages/TimeTable/TimeTable",
+    "pages/Leave/toLeave/toLeave",
+    "pages/Login/Confirm"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "我的共院",
+    "navigationBarBackgroundColor": "#174B89",
+    "backgroundColor": "#174B89"
+  },
+  "tabBar": {
+    "color": "#000000",
+    "backgroundColor": "#FFFFFF",
+    "selectedColor": "#174B89",
+    "list": [
+      {
+        "pagePath": "pages/TimeTable/TimeTable",
+        "text": "课表",
+        "iconPath": "static/img/TimeTable.png",
+        "selectedIconPath": "static/img/checkTimeTable.png"
+      },
+      {
+        "pagePath": "pages/Dynamic/Dynamic",
+        "text": "动态",
+        "iconPath": "static/img/Dynamic.png",
+        "selectedIconPath": "static/img/checkDynamic.png"
+      },
+      {
+        "pagePath": "pages/Leave/Leave",
+        "text": "我的",
+        "iconPath": "static/img/Leave.png",
+        "selectedIconPath": "static/img/checkLeave.png"
+      }
+    ]
+  },
+  "permission": {},
+  "usingComponents": {}
+}

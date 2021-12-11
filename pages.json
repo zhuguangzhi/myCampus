@@ -1,0 +1,86 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/Login/Index",
+			"style": {
+			            "navigationBarTitleText": "",
+						"navigationBarBackgroundColor":"#FFFFFF"
+			        }
+		}
+	    ,{
+            "path" : "pages/Leave/Leave",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "我的",
+                "enablePullDownRefresh": false
+            }
+            
+        },{
+            "path" : "pages/Dynamic/Dynamic",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "动态",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/TimeTable/TimeTable",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "课表",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/toLeave/toLeave",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "请假",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Login/Confirm",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
+	"tabBar": {
+		"color": "#000000",
+		"backgroundColor": "#FFFFFF",
+		"selectedColor": "#174B89",
+		"list": [
+			{
+				"pagePath": "pages/TimeTable/TimeTable",
+				"text": "课表",
+				"iconPath": "static/img/TimeTable.png",
+				"selectedIconPath": "static/img/checkTimeTable.png"
+			},
+			{
+				"pagePath": "pages/Dynamic/Dynamic",
+				"text": "动态",
+				"iconPath": "static/img/Dynamic.png",
+				"selectedIconPath": "static/img/checkDynamic.png"
+			},
+			{
+				"pagePath": "pages/Leave/Leave",
+				"text": "我的",
+				"iconPath": "static/img/Leave.png",
+				"selectedIconPath": "static/img/checkLeave.png"
+			}	
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "#FFFFFF",
+		"navigationBarTitleText": "我的共院",
+		"navigationBarBackgroundColor": "#174B89",
+		"backgroundColor": "#174B89"
+	}
+}

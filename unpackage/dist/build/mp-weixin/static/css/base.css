@@ -1,0 +1,14 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+:root {
+	--fontSize-16:16px;
+	--color: #174B89;
+}
+.base {
+	padding: 0 10;
+	line-height: 100%;
+	text-align: center;
+	font-size: var(--fontSize-16);
+}

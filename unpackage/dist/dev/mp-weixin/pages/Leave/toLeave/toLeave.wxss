@@ -1,0 +1,99 @@
+.data-v-0f462448:root {
+	--fontSize-16:16px;
+	--color: #174B89;
+}
+.base.data-v-0f462448 {
+	padding: 0 10;
+	line-height: 100%;
+	text-align: center;
+	font-size: var(--fontSize-16);
+}
+.toLeave.data-v-0f462448 {
+  width: 100%;
+  height: 100%;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 0 20px;
+}
+.toLeave.data-v-0f462448::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: 110px;
+  background-color: var(--color);
+}
+.card.data-v-0f462448 {
+  position: relative;
+  width: 100%;
+  padding: 15px 10px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  margin: 20px 0;
+  -webkit-border-radius: 10px;
+          border-radius: 10px;
+  background-color: #FFFFFF;
+  -webkit-box-shadow: 0 0 6px 0px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 0 6px 0px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+.card .point.data-v-0f462448 {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  -webkit-border-radius: 10px;
+          border-radius: 10px;
+}
+.card .LeaveType.data-v-0f462448 {
+  font-size: 16px;
+}
+.card .showMsg.data-v-0f462448 {
+  position: absolute;
+  right: 10px;
+  font-size: 14px;
+  color: #999999;
+}
+.card .reason.data-v-0f462448 {
+  width: 100%;
+  min-height: 30px;
+  max-height: 80px;
+  color: #999999;
+  line-height: 10px;
+  font-size: 14px;
+  border: none;
+}
+.card .mobileStyle.data-v-0f462448 {
+  position: absolute;
+  right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: right;
+  color: #999999;
+  font-size: 14px;
+  border: none;
+}
+.btn.data-v-0f462448 {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-around;
+          justify-content: space-around;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 40px 0 20px 0;
+}
+.btn text.data-v-0f462448 {
+  display: inline-block;
+  width: 45%;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  background-color: var(--color);
+  -webkit-border-radius: 50px;
+          border-radius: 50px;
+}
+
