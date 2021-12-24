@@ -19,30 +19,35 @@ export function timediff(begin_time,end_time)
 		let starttime =begin_time;
 		let endtime = end_time;
 		let timediff = endtime-starttime;
-		let y=0,M=0,d=0;
 		//计算小时数
 		let hours = Math.floor(timediff/(3600 * 1000));
 		let h = hours;
-		while ((hours - 24*365)>=0){
-		    y+=1;
-		    hours -= 24*365;
-		}
-		while ((hours - 24*31)>=0){
-		    M+=1;
-		    hours -= 24*31;
-		}
-		while ((hours - 24)>=0){
-		    d+=1;
-		    hours -= 24
-		}
-		let arr = [];
-		arr.push(y,M,d,hours)
-		let msg  = ['年','月','天','时']
-		let res = '' ;
-		arr.forEach((item,index)=>{
-		    if(item!==0) {
-		        res += item + msg[index]
-		    }
-		})
+		let res = hToD(hours);
     	return [res,h];
     }
+	// 小时转年月日
+export function hToD(hours){
+	let y=0,M=0,d=0;
+	while ((hours - 24*365)>=0){
+	    y+=1;
+	    hours -= 24*365;
+	}
+	while ((hours - 24*31)>=0){
+	    M+=1;
+	    hours -= 24*31;
+	}
+	while ((hours - 24)>=0){
+	    d+=1;
+	    hours -= 24
+	}
+	let arr = [];
+	arr.push(y,M,d,hours)
+	let msg  = ['年','月','天','时']
+	let res = '' ;
+	arr.forEach((item,index)=>{
+	    if(item!==0) {
+	        res += item + msg[index]
+	    }
+	})
+	return res;
+}

@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "请假",
-  "enablePullDownRefresh": false,
-  "usingComponents": {
-    "xp-picker": "/components/uniapp/xp-picker/xp-picker"
-  }
-}

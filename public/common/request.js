@@ -1,6 +1,7 @@
 // 引入配置文件
 import BaseConfig from "../config/BaseConfig.js";
 import User from '../config/user.js';
+import  { toPage }  from '@/public/common/baseFn.js'
 import UserLogin from '../api/login.js'
 export default{
 	config:{
@@ -46,6 +47,11 @@ export default{
 		}
 		if (res.data.errorCode) {
 			typeof errfun === 'function' && resfun();
+			// 判断是否是登录失败
+			if(res.data.errorCode === "40003"){
+				toPage('/pages/Login/Index','redirectTo');
+				return false;
+			}
 			uni.showToast({ title: res.data.msg,icon:"none" });
 			return false;
 		}

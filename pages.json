@@ -34,7 +34,7 @@
             
         }
         ,{
-            "path" : "pages/Leave/toLeave/toLeave",
+            "path" : "pages/Leave/Mine/toLeave",
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "请假",
@@ -47,6 +47,52 @@
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/LeaveInfo",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "请假概览",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/component/student/leaveDetailed",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "请假详情",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/component/teacher/leaveStatistics",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "统计",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        
+        ,{
+            "path" : "pages/Leave/Mine/Sign/studentSign",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "签到",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/Sign/createSign",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "创建签到",
                 "enablePullDownRefresh": false
             }
             

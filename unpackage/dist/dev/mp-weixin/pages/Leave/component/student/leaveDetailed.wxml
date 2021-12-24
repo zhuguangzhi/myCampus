@@ -1,0 +1,1 @@
+<view class="toLeave data-v-08ab4780"><block wx:if="{{leaveInfo}}"><leave-item vue-id="0cbe2986-1" form="{{leaveInfo}}" showStartTime="{{leaveInfo.startTime}}" showEndTime="{{leaveInfo.endTime}}" showLeaveTime="{{leaveInfo.leave_time}}" disabled="{{true}}" class="data-v-08ab4780" bind:__l="__l"></leave-item></block></view>

@@ -8,17 +8,17 @@
 	text-align: center;
 	font-size: var(--fontSize-16);
 }
+.icon.data-v-19418c83 {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	margin-right: 10px;
+	vertical-align: top;
+}
 .content.data-v-19418c83 {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-          align-items: center;
+  flex-direction: column;
+  align-items: center;
   width: 750rpx;
   height: 100vh;
   background-color: #FFFFFF;
@@ -46,8 +46,7 @@
   width: 100%;
   height: 40px;
   margin-top: 60px;
-  -webkit-border-radius: 5px;
-          border-radius: 5px;
+  border-radius: 5px;
   outline: none;
   background-color: var(--color);
   color: #FFFFFF;

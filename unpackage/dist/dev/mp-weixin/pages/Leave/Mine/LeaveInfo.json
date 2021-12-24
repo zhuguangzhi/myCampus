@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "请假概览",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "student-leave": "/pages/Leave/component/student/studentLeaveInfo",
+    "teacher-leave": "/pages/Leave/component/teacher/searchLeaveInfo"
+  }
+}

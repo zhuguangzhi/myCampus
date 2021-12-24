@@ -6,6 +6,7 @@
 			<text>下次重置时间：<text class="time">{{time}}</text></text>
 		</view>
 		<button class="confirmBtn" :disabled="isDisable" @click="confirmBtn()">绑定</button>
+		<RevisePassword v-if="isFrist" @revise="revise"/>
 	</view>
 </template>
 
@@ -13,14 +14,20 @@
 	import LoginServe from '@/public/api/login.js';
 	import { showLoading,setStorage,toPage,getStorage } from '@/public/common/baseFn.js'
 	import UserConfig from '@/public/config/user.js'
+	import RevisePassword from '@/components/Login/revisePassword.vue'
 	export default {
 		name:'Confirm',
 		data() {
 			return {
 				num:'',
 				time:'',
-				userId:''
+				userId:'',
+				// 是否需要修改密码
+				isFrist:false,
 			};
+		},
+		components:{
+			RevisePassword
 		},
 		computed:{
 			isDisable(){
@@ -28,20 +35,24 @@
 			}
 		},
 		onLoad(options) {
-			showLoading();
 			this.userId = options.userId
 		},
-		async mounted() {
-			let [err,res] = await LoginServe.getBindNum(this.userId);
-			if (!this.$http.errorCheck(err,res)) return false;
-			let data = res.data.data;
-			uni.hideLoading();
-			this.num = data.bindNum.toString();
-			this.time = data.deadline.toString();
+		mounted() {
+			let Info = this.$store.getters.getUserInfo['bindInfo'];
+			if(Info!=null && Info!==false){
+				this.num=Info.bindNum.toString();
+				this.time=Info.deadline.toString();
+				return false
+			}
+			this.num="暂未绑定";
+			this.time="暂未绑定";
+			this.isFrist=true;
+			
 		},
 		methods:{
 			async confirmBtn(){
 				showLoading();
+				// 绑定用户设备和微信id
 				let [err,res] = await LoginServe.bindOpenId(this.userId);
 				if(!this.$http.errorCheck(err,res)) return false;
 				// 通过
@@ -53,6 +64,12 @@
 				uni.hideLoading();
 				toPage('/pages/TimeTable/TimeTable','switchTab');
 				
+			},
+			// 修改密码按钮
+			revise(res){
+				if(res){
+					this.isFrist=false;
+				}
 			}
 		},
 	}
@@ -60,6 +77,7 @@
 
 <style lang="less" scoped>
 	@import '/static/css/base.css';
+	@import '/static/css/animate.min.css';
 .content {
 	box-sizing: border-box;
 	padding: 20px;

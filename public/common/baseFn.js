@@ -1,4 +1,6 @@
 import BaseConfig from '@/public/config/BaseConfig.js'
+import amap from "@/lib/amap-wx.js"
+import QQMapWX from '@/lib/qqmap-wx-jssdk.min.js'
 
 let root = BaseConfig.storageRoot
 // 消息提示
@@ -57,14 +59,37 @@ const toPage = function(options,type='navigateTo'){
 			break;
 	}	
 		
-}
-// 加载
+}// 加载
 const showLoading =function(title='加载中',mask=true){
 	uni.showLoading({
 		title:title,
 		mask:mask,
 	})
 }
+// 高德 地址逆编码
+const getreverseGeocode =function(longitude,latitude,that) {
+	let key= BaseConfig.AmapKey
+	const amapPlugin = new amap.AMapWX({key});
+	latitude= 29.225049641927082;
+	longitude= 115.80669650607639;
+	let location= '' + longitude + ',' + latitude + ''; //location的格式为'经度,纬度'
+	amapPlugin.getRegeo({
+		location,
+		success:(data)=>{
+			
+			// 获取省名+市名
+			let str = data[0].regeocodeData.addressComponent.province + data[0].regeocodeData.addressComponent.city
+			let address = data[0].regeocodeData.formatted_address
+			console.log(data[0])
+			address = address.replace(str,'')
+			that.address = address;
+		},
+		fail:(err)=>{
+			that.address = err
+		}
+	})
+}
+
 export  {
 	 message,
 	 setStorage,
@@ -72,5 +97,6 @@ export  {
 	 showLoading,
 	 sleep,
 	 toPage,
-	 delStorage
+	 delStorage,
+	 getreverseGeocode
 }

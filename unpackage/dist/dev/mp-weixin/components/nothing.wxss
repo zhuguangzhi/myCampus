@@ -1,0 +1,25 @@
+.content.data-v-4e0c69e2 {
+  width: 100vw;
+  height: 100vh;
+  background-color: #FFFFFF;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+.content image.data-v-4e0c69e2 {
+  position: relative;
+  display: block;
+  left: 15vw;
+  top: 80px;
+  width: 70vw;
+}
+.content .msg.data-v-4e0c69e2 {
+  display: block;
+  width: 70vw;
+  margin: 80px 0 0 15vw;
+  text-align: center;
+  font-size: 16px;
+  color: #999999;
+}
+

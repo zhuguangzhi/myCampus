@@ -26,7 +26,7 @@
 				<text>我的服务</text>
 			</view>
 			<view class="choiceItem">
-				<view class="leave item" @click="Leave()">
+				<view class="leave item" @click="routePush(1)">
 					<image class="img" src="../../static/img/iconfont/leave.svg" mode=""></image>
 					<text>请假</text>
 				</view>
@@ -34,7 +34,7 @@
 					<image class="img" src="../../static/img/iconfont/leaveCancel.svg" mode=""></image>
 					<text>销假</text>
 				</view>
-				<view class="singIn item">
+				<view class="singIn item" @click="routePush(3)">
 					<image class="img" src="../../static/img/iconfont/singIn.svg" mode="">
 						<text>签到</text>
 					</image>
@@ -85,12 +85,31 @@
 		methods: {
 			// 选择服务
 			choiceServers(index){
-				console.log(index)
+				let page;
+				switch(index){
+					case 0:
+						page = 'LeaveInfo';
+						break;
+					case 3:
+						page = 'Sign';
+						break;
+					default:
+						return false;
+				}
+				toPage(`/pages/Leave/Mine/${page}`);
+				
 			},
-			// 请假
-			Leave(){
-				if(this.userInfo.isTeacher) return false;
-				toPage('/pages/Leave/toLeave/toLeave')
+			// 页面跳转
+			routePush(index){
+				let route = [];
+				if(this.userInfo.isTeacher) {
+					// 教师端
+					return false
+				}else {
+					// 学生端
+					route = ['toLeave','LeaveCancle','Sign/studentSign']
+				}
+				toPage(`/pages/Leave/Mine/${route[index - 1]}`)
 			}
 		}
 	}

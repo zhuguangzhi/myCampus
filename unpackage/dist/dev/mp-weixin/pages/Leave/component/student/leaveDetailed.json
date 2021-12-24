@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "请假详情",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "leave-item": "/pages/Leave/component/LeaveItem"
+  }
+}

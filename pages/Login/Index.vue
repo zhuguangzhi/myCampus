@@ -8,7 +8,7 @@
 			<button type="default" open-type="getUserInfo" class='loginBtn base'  @getuserinfo="toLogin" >登录</button>
 		</view>
 		<text class="base tip">忘记密码请及时联系管理员</text>
-		<Face v-if="checkFace" @checkResult="checkResult()"  :userId="userId"/>
+		<Face v-if="checkFace" @checkResult="checkResult()" :face="faceType"  :userId="userId"/>
 	</view>
 </template>
 
@@ -16,7 +16,7 @@
 	import  { setStorage,getStorage,showLoading,toPage }  from '@/public/common/baseFn.js'
 	import loginServer from '@/public/api/login.js'
 	import UserConfig from '@/public/config/user.js'
-	import Face from '@/components/face.vue'
+	import Face from '@/components/Login/face.vue'
 	export default {
 		name:"Login",
 		data() {
@@ -29,7 +29,9 @@
 				// 人脸验证
 				checkFace:false,
 				// 设备型号
-				stystemModel:null,
+				systemModel:null,
+				// 人脸类型
+				faceType:'checkFace'
 			};
 			
 		},
@@ -39,8 +41,9 @@
 		async created() {
 			showLoading()
 			let stystem = uni.getSystemInfoSync()
-			this.stystemModel = stystem.model
-			
+			this.systemModel = stystem.model
+			// 存储状态栏高度
+			setStorage('systemStatusHeight',stystem.statusBarHeight)
 			// token验证
 			let [err,res] = await loginServer.tokenLogin();
 			uni.hideLoading();
@@ -55,25 +58,45 @@
 				showLoading('登陆中')
 				this.checkInfo() 
 				const [uniError,uniData] = await uni.login();
-				const [loginErr,loginData] = await loginServer.login(this.userId,this.password);
-				
+				let params = {
+					'userId':this.userId,
+					'password':this.password,
+					'code':uniData.code,
+					'systemId':this.systemModel
+				}
+				const [loginErr,loginData] = await loginServer.login(params);
 				// 校验是否错误
 				if(!this.$http.errorCheck(loginErr,loginData))return false;
-				const [checkOpenIdErr,checkOpenIdRes] = await loginServer.getOpenId(this.userId,this.stystemModel,uniData.code);
-				if(!checkOpenIdRes.data.data.checkResult){
-					// 验证未通过 进行其他辅助验证，如人脸识别验证，修改openId
-					uni.hideLoading()
-					// 开启人脸验证
-					this.checkFace=true;
+				
+				uni.hideLoading()
+				let data = loginData.data.data;
+				// TODO:下面两行用于开发
+				this.toIndexPage(loginData.data.data)
+				return false
+				// opid进行校验
+				if(data.bindInfo===false){
+					// 第一次登录，要求修改密码 
 					// 将获取到的用户信息缓存在store中
 					this.$store.commit('setUserInfo',loginData.data.data)
-					return false; 
+					UserConfig.userInfo={
+						'bindInfo':false
+					};
+					// 第一次登录 录入人脸
+					this.faceType="create"
+					this.checkFace=true;
+					return false;
+				}else if(data.openId===false){
+					// 不同账号，须人脸验证
+					this.$store.commit('setUserInfo',loginData.data.data)
+					UserConfig.userInfo={
+						'bindInfo':false
+					};
+					this.faceType="faceCheck"
+					this.checkFace=true;
+					return false;
 				}
-				// 判断是否是第一次登录，要求修改密码
-				if(loginData.data.data.isLogin===0){}
-				uni.hideLoading()
 				// 页面跳转
-				this.toIndexPage(loginData.data.data)
+				// this.toIndexPage(loginData.data.data)
 			},
 			// 检验输入框信息
 			checkInfo(){

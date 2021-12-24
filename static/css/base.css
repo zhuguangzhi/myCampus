@@ -12,3 +12,10 @@
 	text-align: center;
 	font-size: var(--fontSize-16);
 }
+.icon {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	margin-right: 10px;
+	vertical-align: top;
+}

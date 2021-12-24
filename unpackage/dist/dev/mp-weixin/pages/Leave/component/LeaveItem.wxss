@@ -1,0 +1,71 @@
+.card.data-v-384e1217 {
+  position: relative;
+  width: 100%;
+  padding: 15px 10px;
+  box-sizing: border-box;
+  margin: 20px 0;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 6px 0px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+.card .point.data-v-384e1217 {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 10px;
+}
+.card .LeaveType.data-v-384e1217 {
+  font-size: 16px;
+}
+.card .showMsg.data-v-384e1217 {
+  position: absolute;
+  right: 10px;
+  font-size: 14px;
+  color: #999999;
+}
+.card .reason.data-v-384e1217 {
+  width: 100%;
+  min-height: 30px;
+  max-height: 80px;
+  color: #999999;
+  line-height: 10px;
+  font-size: 14px;
+  border: none;
+}
+.card .mobileStyle.data-v-384e1217 {
+  position: absolute;
+  right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  text-align: right;
+  color: #999999;
+  font-size: 14px;
+  border: none;
+}
+.btn.data-v-384e1217 {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 40px 0 20px 0;
+}
+.btn text.data-v-384e1217 {
+  display: inline-block;
+  width: 45%;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  background-color: var(--color);
+  border-radius: 50px;
+}
+.result.data-v-384e1217 {
+  display: block;
+  position: absolute;
+  right: 30px;
+  font-size: 20px;
+}
+

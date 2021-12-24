@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "load-refresh": "/components/uniapp/load-refresh/load-refresh",
+    "nothing": "/components/nothing"
+  }
+}

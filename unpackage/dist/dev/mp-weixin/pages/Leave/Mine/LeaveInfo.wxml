@@ -1,0 +1,1 @@
+<block wx:if="{{!showLeave}}"><student-leave vue-id="3d998d0c-1" bind:__l="__l"></student-leave></block><block wx:else><teacher-leave vue-id="3d998d0c-2" bind:__l="__l"></teacher-leave></block>
