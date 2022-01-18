@@ -130,7 +130,7 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 13));
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));
 
 
 
@@ -145,25 +145,27 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 18);
-var _login = _interopRequireDefault(__webpack_require__(/*! @/public/api/login.js */ 22));
-var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 17));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var Face = function Face() {Promise.all(/*! require.ensure | components/Login/face */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/Login/face")]).then((function () {return resolve(__webpack_require__(/*! @/components/Login/face.vue */ 103));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
+var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);
+var _login = _interopRequireDefault(__webpack_require__(/*! @/public/api/login.js */ 20));
+var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));
+var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var Face = function Face() {Promise.all(/*! require.ensure | components/Login/face */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/Login/face")]).then((function () {return resolve(__webpack_require__(/*! @/components/Login/face.vue */ 124));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
 
 {
   name: "Login",
   data: function data() {
     return {
       // userId:null,
-      userId: '8120118001',
+      userId: 't8002056',
       // password:null,
-      password: '88888888',
+      password: '123123',
       errTip: null,
       // 人脸验证
       checkFace: false,
       // 设备型号
       systemModel: null,
       // 人脸类型
-      faceType: 'checkFace' };
+      faceType: 'checkFace',
+      userInfo: null };
 
 
   },
@@ -174,19 +176,19 @@ var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.
               (0, _baseFn.showLoading)();
               stystem = uni.getSystemInfoSync();
               _this.systemModel = stystem.model;
-              // 存储状态栏高度
-              (0, _baseFn.setStorage)('systemStatusHeight', stystem.statusBarHeight);
               // token验证
-              _context.next = 6;return _login.default.tokenLogin();case 6:_yield$loginServer$to = _context.sent;_yield$loginServer$to2 = _slicedToArray(_yield$loginServer$to, 2);err = _yield$loginServer$to2[0];res = _yield$loginServer$to2[1];
-              uni.hideLoading();if (
-              _this.$http.errorCheck(err, res)) {_context.next = 13;break;}return _context.abrupt("return",
-              false);case 13:
+              _context.next = 5;return _login.default.tokenLogin();case 5:_yield$loginServer$to = _context.sent;_yield$loginServer$to2 = _slicedToArray(_yield$loginServer$to, 2);err = _yield$loginServer$to2[0];res = _yield$loginServer$to2[1];
+              uni.hideLoading();if (!
+              res.data.errorCode) {_context.next = 12;break;}return _context.abrupt("return",
+              false);case 12:
 
+              _this.userInfo = res.data.data;
               _this.toIndexPage(res.data.data);case 14:case "end":return _context.stop();}}}, _callee);}))();
   },
   methods: {
     // 登录
     toLogin: function toLogin() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var _yield$uni$login, _yield$uni$login2, uniError, uniData, params, _yield$loginServer$lo, _yield$loginServer$lo2, loginErr, loginData, data;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+                // 消息订阅 
                 (0, _baseFn.showLoading)('登陆中');
                 _this2.checkInfo();_context2.next = 4;return (
                   uni.login());case 4:_yield$uni$login = _context2.sent;_yield$uni$login2 = _slicedToArray(_yield$uni$login, 2);uniError = _yield$uni$login2[0];uniData = _yield$uni$login2[1];
@@ -202,32 +204,47 @@ var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.
 
                 uni.hideLoading();
                 data = loginData.data.data;
-                // TODO:下面两行用于开发
-                _this2.toIndexPage(loginData.data.data);return _context2.abrupt("return",
-                false);case 29:if (!(
+                // this.toIndexPage(data)
+                // return false
+                // opid进行校验
+                if (!(data.bindInfo === false)) {_context2.next = 26;break;}
+                // 第一次登录，要求修改密码 
+                // 将获取到的用户信息缓存在store中
+                _this2.$store.commit('setUserInfo', loginData.data.data);
+                _user.default.userInfo = {
+                  'bindInfo': false };
 
-
-
-
-
-
-
-
-
-
-
-
-                data.openId === false)) {_context2.next = 35;break;}
+                // 第一次登录 录入人脸
+                _this2.checkResult(true);
+                // this.faceType="create"
+                // this.checkFace=true;
+                return _context2.abrupt("return", false);case 26:if (!(
+                data.openId === false)) {_context2.next = 31;break;}
                 // 不同账号，须人脸验证
                 _this2.$store.commit('setUserInfo', loginData.data.data);
                 _user.default.userInfo = {
                   'bindInfo': false };
 
-                _this2.faceType = "faceCheck";
-                _this2.checkFace = true;return _context2.abrupt("return",
-                false);case 35:case "end":return _context2.stop();}}}, _callee2);}))();
+                // this.faceType="faceCheck"
+                // this.checkFace=true;
+                _this2.checkResult(true);return _context2.abrupt("return",
+                false);case 31:
 
-
+                // 页面跳转
+                _this2.toIndexPage(data);case 32:case "end":return _context2.stop();}}}, _callee2);}))();
+    },
+    requestSubscibe: function requestSubscibe() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:if (!(
+                _this3.userId[0] !== 't')) {_context3.next = 3;break;}
+                // 学生登录
+                _this3.toLogin();return _context3.abrupt("return",
+                false);case 3:
+                ;
+                // 教师登录
+                _context3.next = 6;return uni.requestSubscribeMessage({
+                  tmplIds: _BaseConfig.default.subscribeLeaveApply,
+                  success: function success(res) {
+                    _this3.toLogin();
+                  } });case 6:case "end":return _context3.stop();}}}, _callee3);}))();
 
     },
     // 检验输入框信息
@@ -245,6 +262,7 @@ var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.
       // 重新配置缓存信息
       _user.default.userInfo = (0, _baseFn.getStorage)('userInfo');
       (0, _baseFn.toPage)('/pages/TimeTable/TimeTable', 'switchTab');
+      // toPage('/pages/Leave/Mine/Sign/createSign')
     },
     checkResult: function checkResult(res) {
       if (res) {

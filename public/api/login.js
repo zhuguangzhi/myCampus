@@ -13,18 +13,12 @@ export default class loginServe {
 	// token登录
 	static tokenLogin(){
 		if(!User.userInfo){
-			uni.showToast({ title: '登录失败', icon:"none" })
-			uni.navigateTo({
-				url: '/pages/login/index'
-			});
+			uni.hideLoading();
 			return new Promise(()=>{
 				return false;
 			});
 		}
 		return Request.post('/tokenLogin',{},{'token':true});
-	}
-	static getOpenId(userId,systemId,code){
-		return Request.get('/getOpenId',{userId,systemId,code})
 	}
 	static bindOpenId(userId){
 		return Request.post('/bindOpenId',{"userId":userId})

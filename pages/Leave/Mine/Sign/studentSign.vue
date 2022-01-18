@@ -1,5 +1,5 @@
 <template>
-	<view class="studentSign">
+	<view class="studentSign" v-if="course.courseName">
 		<view class="signTip">
 			<h2 class="title">签到须知</h2>
 			<ul class="list">
@@ -25,31 +25,47 @@
 			</view>
 			<view class="line">
 				<image class="icon" src="@/static/img/iconfont/curriculum.svg"></image>
-				<text>软件工程导论</text>
+				<text>{{course.courseName}}</text>
 			</view>
 		</view>
-		<button class="btn" type="default">签到</button>
+		<button class="btn" type="default" @click="toSign()">签到</button>
 	</view>
+	<nothing v-else msg="暂无教师发布签到"/>
 </template>
 
 <script>
-	import {getreverseGeocode} from '@/public/common/baseFn.js'
+	import {getreverseGeocode,showLoading,toPage} from '@/public/common/baseFn.js'
+	import nothing from '@/components/nothing.vue'
+	import CourseServer from '@/public/api/course.js'
+	import websocketUtil from '@/public/common/socket.js'
 	export default {
+		components:{
+			nothing
+		},
 		data() {
 			return {
 				latitude:'',
 				longitude:'',
-				address:'位置获取中...'
+				address:'位置获取中...',
+				course:{},//签到的课程名
+				webSocket:null,
 			}
 		},
 		created() {
 			this.getLocation();
+			showLoading('签到获取中...')
+			this.getCourse();
+			// 连接socket
+			this.webSocket = new websocketUtil()
 		},
 		onLoad() {
 			let map = uni.createMapContext('map',this);
 			setInterval(()=>{
 				map.moveToLocation()
 			},3000)
+		},
+		onHide() {
+			this.webSocket.close();
 		},
 		methods: {
 			//获取用户地理位置
@@ -82,6 +98,27 @@
 						})
 					}
 				});
+			},
+			// 获取签到课程信息
+			async getCourse(){
+				let [err,res] = await CourseServer.getStudensSignList();
+				uni.hideLoading();
+				if(!this.$http.errorCheck(err,res)) return false
+				this.course = res.data.data
+			},
+			// 签到
+			async toSign(){
+				showLoading('签到中...')
+				let [err,res] = await CourseServer.studentSign(
+					this.course.signId,
+					this.course.teacherId,
+					this.address,
+					this.latitude,
+					this.longitude
+				);
+				uni.hideLoading();
+				if(!this.$http.errorCheck(err,res)) return;
+				toPage('/pages/Leave/Leave','switchTab');
 			}
 		}
 	}

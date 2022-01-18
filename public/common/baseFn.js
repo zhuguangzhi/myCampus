@@ -1,14 +1,14 @@
 import BaseConfig from '@/public/config/BaseConfig.js'
 import amap from "@/lib/amap-wx.js"
-import QQMapWX from '@/lib/qqmap-wx-jssdk.min.js'
 
 let root = BaseConfig.storageRoot
 // 消息提示
-const message = function(msg='加载中',time=2000) {
+const message = function(msg='加载中',time=2000,mask=false) {
 		uni. showToast({
 			title:msg,
 			icon:'none',
-			duration:time
+			duration:time,
+			mask:mask
 		})
 	}
 // 设置缓存
@@ -70,8 +70,6 @@ const showLoading =function(title='加载中',mask=true){
 const getreverseGeocode =function(longitude,latitude,that) {
 	let key= BaseConfig.AmapKey
 	const amapPlugin = new amap.AMapWX({key});
-	latitude= 29.225049641927082;
-	longitude= 115.80669650607639;
 	let location= '' + longitude + ',' + latitude + ''; //location的格式为'经度,纬度'
 	amapPlugin.getRegeo({
 		location,
@@ -89,7 +87,19 @@ const getreverseGeocode =function(longitude,latitude,that) {
 		}
 	})
 }
-
+// 模态框
+const showModel = async function(content){
+	let options={
+		title: '提示',
+		content: content,
+		cancelText: "取消", // 取消按钮的文字  
+		confirmText: "确定", // 确认按钮文字  
+		showCancel: true, // 是否显示取消按钮，默认为 true
+		confirmColor: '#174B89',
+		cancelColor: '#999999',
+	}
+	return await uni.showModal(options)
+}
 export  {
 	 message,
 	 setStorage,
@@ -98,5 +108,6 @@ export  {
 	 sleep,
 	 toPage,
 	 delStorage,
-	 getreverseGeocode
+	 getreverseGeocode,
+	 showModel
 }

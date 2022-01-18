@@ -1,0 +1,136 @@
+.data-v-c6189c56:root {
+	--fontSize-16:16px;
+	--color: #174B89;
+}
+.base.data-v-c6189c56 {
+	padding: 0 10;
+	line-height: 100%;
+	text-align: center;
+	font-size: var(--fontSize-16);
+}
+.icon.data-v-c6189c56 {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	margin-right: 10px;
+	vertical-align: top;
+}
+.leave.data-v-c6189c56 {
+  width: 100vw;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.box.data-v-c6189c56 {
+  position: relative;
+  width: calc(100vw - 30px);
+  box-sizing: border-box;
+  margin: 20px 15px 0 15px;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  padding: 20px 10px;
+}
+.box .radio.data-v-c6189c56 {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  top: -12px;
+  right: -7px;
+}
+.leaveHead.data-v-c6189c56 {
+  position: relative;
+  height: 30px;
+}
+.leaveHead .point.data-v-c6189c56 {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 10px;
+}
+.leaveHead .LeaveType.data-v-c6189c56 {
+  font-size: 16px;
+}
+.leaveHead .leaveTime.data-v-c6189c56 {
+  position: absolute;
+  height: 30px;
+  line-height: 30px;
+  right: 10px;
+  display: inline-block;
+  font-size: 14px;
+  color: #999999;
+}
+.studentInfo.data-v-c6189c56,
+.toPlace.data-v-c6189c56,
+.leaveReason.data-v-c6189c56 {
+  padding: 10px 5px;
+}
+.studentName.data-v-c6189c56 {
+  font-size: 16px;
+  display: inline-block;
+  margin-right: 10px;
+}
+.className.data-v-c6189c56 {
+  font-size: 14px;
+  color: #666666;
+}
+.imageSize.data-v-c6189c56 {
+  width: 20px;
+  height: 20px;
+}
+.leaveReason.data-v-c6189c56 {
+  display: flex;
+  justify-content: space-around;
+}
+.reason.data-v-c6189c56 {
+  flex: 1;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.timeSlot.data-v-c6189c56 {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  border: 1px solid #999999;
+  border-radius: 40px;
+  box-sizing: border-box;
+  line-height: 40px;
+  padding: 0 10px;
+}
+.timeSlot text.data-v-c6189c56:last-child {
+  display: inline-block;
+  position: absolute;
+  right: 10px;
+  height: 40px;
+  color: #999999;
+}
+.bottomBua.data-v-c6189c56 {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 8%;
+  box-sizing: border-box;
+  border: 1px solid #eeeeee;
+  background-color: #FFFFFF;
+  padding: 0 10px;
+}
+.bottomBua .btn.data-v-c6189c56 {
+  position: absolute;
+  right: 10px;
+  width: 160px;
+  height: 40px;
+  border-radius: 40px;
+  background-color: var(--color);
+  color: #FFFFFF;
+  font-size: 16px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  line-height: 40px;
+  text-align: center;
+}
+

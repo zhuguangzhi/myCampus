@@ -183,9 +183,9 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 
 
-var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 17));
-var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 16));
-var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 18);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} //
+var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));
+var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));
+var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} //
 //
 //
 //
@@ -240,8 +240,8 @@ var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 18);function 
 var _default = { name: 'Leave', created: function created() {this.userInfo = _user.default.userInfo;}, data: function data() {return { userInfo: null, defaultPhoto: _BaseConfig.default.staticUrl + '/image/defaultPhoto.jpeg', severList: ['请假信息', '考勤记录', '动态收藏', '动态历史', '我的消息'] };}, computed: { computedIdentity: function computedIdentity() {if (this.userInfo.isTeacher) {return '教师';} else {return '学生';}} }, methods: { // 选择服务
     choiceServers: function choiceServers(index) {var page;switch (index) {case 0:page = 'LeaveInfo';break;case 3:page = 'Sign';break;default:return false;}(0, _baseFn.toPage)("/pages/Leave/Mine/".concat(page));}, // 页面跳转
     routePush: function routePush(index) {var route = [];if (this.userInfo.isTeacher) {// 教师端
-        return false;} else {// 学生端
-        route = ['toLeave', 'LeaveCancle', 'Sign/studentSign'];}(0, _baseFn.toPage)("/pages/Leave/Mine/".concat(route[index - 1]));
+        route = ['searchLeaveApply', 'DivideLeave/DivideLeave', 'Sign/createSign'];} else {// 学生端
+        route = ['toLeave', 'DivideLeave/DivideLeave', 'Sign/studentSign'];}(0, _baseFn.toPage)("/pages/Leave/Mine/".concat(route[index - 1]));
     } } };exports.default = _default;
 
 /***/ }),

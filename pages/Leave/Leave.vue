@@ -30,7 +30,7 @@
 					<image class="img" src="../../static/img/iconfont/leave.svg" mode=""></image>
 					<text>请假</text>
 				</view>
-				<view class="LeaveCancellation item">
+				<view class="LeaveCancellation item" @click="routePush(2)">
 					<image class="img" src="../../static/img/iconfont/leaveCancel.svg" mode=""></image>
 					<text>销假</text>
 				</view>
@@ -104,10 +104,10 @@
 				let route = [];
 				if(this.userInfo.isTeacher) {
 					// 教师端
-					return false
+					route = ['searchLeaveApply','DivideLeave/DivideLeave','Sign/createSign']
 				}else {
 					// 学生端
-					route = ['toLeave','LeaveCancle','Sign/studentSign']
+					route = ['toLeave','DivideLeave/DivideLeave','Sign/studentSign']
 				}
 				toPage(`/pages/Leave/Mine/${route[index - 1]}`)
 			}

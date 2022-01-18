@@ -5,7 +5,7 @@
 			<input type="text" class="base" maxlength="10" placeholder="学号/教职工号" v-model="userId" />
 			<input type="password" class="base" placeholder="密码" v-model="password" />
 			<text v-show="errTip" class="base errTip">{{errTip}}</text>
-			<button type="default" open-type="getUserInfo" class='loginBtn base'  @getuserinfo="toLogin" >登录</button>
+			<button type="default" open-type="getUserInfo" class='loginBtn base' @tap="requestSubscibe()" >登录</button>
 		</view>
 		<text class="base tip">忘记密码请及时联系管理员</text>
 		<Face v-if="checkFace" @checkResult="checkResult()" :face="faceType"  :userId="userId"/>
@@ -16,22 +16,24 @@
 	import  { setStorage,getStorage,showLoading,toPage }  from '@/public/common/baseFn.js'
 	import loginServer from '@/public/api/login.js'
 	import UserConfig from '@/public/config/user.js'
+	import baseConfig from '@/public/config/BaseConfig.js'
 	import Face from '@/components/Login/face.vue'
 	export default {
 		name:"Login",
 		data() {
 			return {
 				// userId:null,
-				userId:'8120118001',
+				userId:'t8002056',
 				// password:null,
-				password:'88888888',
+				password:'123123',
 				errTip:null,
 				// 人脸验证
 				checkFace:false,
 				// 设备型号
 				systemModel:null,
 				// 人脸类型
-				faceType:'checkFace'
+				faceType:'checkFace',
+				userInfo:null,
 			};
 			
 		},
@@ -42,19 +44,19 @@
 			showLoading()
 			let stystem = uni.getSystemInfoSync()
 			this.systemModel = stystem.model
-			// 存储状态栏高度
-			setStorage('systemStatusHeight',stystem.statusBarHeight)
 			// token验证
 			let [err,res] = await loginServer.tokenLogin();
 			uni.hideLoading();
-			if(!this.$http.errorCheck(err,res)){
+			if(res.data.errorCode){
 				return false;
 			}
+			this.userInfo = res.data.data
 			this.toIndexPage(res.data.data);
 		},
 		methods:{
 			// 登录
 			async toLogin(){
+				// 消息订阅 
 				showLoading('登陆中')
 				this.checkInfo() 
 				const [uniError,uniData] = await uni.login();
@@ -70,9 +72,8 @@
 				
 				uni.hideLoading()
 				let data = loginData.data.data;
-				// TODO:下面两行用于开发
-				this.toIndexPage(loginData.data.data)
-				return false
+				// this.toIndexPage(data)
+				// return false
 				// opid进行校验
 				if(data.bindInfo===false){
 					// 第一次登录，要求修改密码 
@@ -82,8 +83,9 @@
 						'bindInfo':false
 					};
 					// 第一次登录 录入人脸
-					this.faceType="create"
-					this.checkFace=true;
+					this.checkResult(true);
+					// this.faceType="create"
+					// this.checkFace=true;
 					return false;
 				}else if(data.openId===false){
 					// 不同账号，须人脸验证
@@ -91,12 +93,27 @@
 					UserConfig.userInfo={
 						'bindInfo':false
 					};
-					this.faceType="faceCheck"
-					this.checkFace=true;
+					// this.faceType="faceCheck"
+					// this.checkFace=true;
+					this.checkResult(true);
 					return false;
 				}
 				// 页面跳转
-				// this.toIndexPage(loginData.data.data)
+				this.toIndexPage(data)
+			},
+			async requestSubscibe(){
+				if(this.userId[0]!=='t'){
+					// 学生登录
+					this.toLogin();
+					return false
+				};
+				// 教师登录
+				await uni.requestSubscribeMessage({
+					tmplIds:baseConfig.subscribeLeaveApply,
+					success:(res)=>{
+						this.toLogin();
+					}
+				})
 			},
 			// 检验输入框信息
 			checkInfo(){
@@ -113,6 +130,7 @@
 				// 重新配置缓存信息
 				UserConfig.userInfo = getStorage('userInfo')
 				toPage('/pages/TimeTable/TimeTable','switchTab');
+				// toPage('/pages/Leave/Mine/Sign/createSign')
 			},
 			checkResult(res){
 				if(res){

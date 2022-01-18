@@ -5,7 +5,7 @@
 			<text>还剩绑定次数：<text class="time">{{num}}</text></text>
 			<text>下次重置时间：<text class="time">{{time}}</text></text>
 		</view>
-		<button class="confirmBtn" :disabled="isDisable" @click="confirmBtn()">绑定</button>
+		<button class="confirmBtn" @click="confirmBtn()">绑定</button>
 		<RevisePassword v-if="isFrist" @revise="revise"/>
 	</view>
 </template>
@@ -28,11 +28,6 @@
 		},
 		components:{
 			RevisePassword
-		},
-		computed:{
-			isDisable(){
-				return this.num>0?false:true
-			}
 		},
 		onLoad(options) {
 			this.userId = options.userId

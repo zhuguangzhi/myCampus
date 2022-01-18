@@ -10,7 +10,9 @@
         "pages/Leave/component/student/leaveDetailed",
         "pages/Leave/component/teacher/leaveStatistics",
         "pages/Leave/Mine/Sign/studentSign",
-        "pages/Leave/Mine/Sign/createSign"
+        "pages/Leave/Mine/Sign/createSign",
+        "pages/Leave/Mine/searchLeaveApply",
+        "pages/Leave/Mine/DivideLeave/DivideLeave"
     ],
     "subPackages": [],
     "window": {

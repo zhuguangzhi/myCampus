@@ -1,7 +1,8 @@
 {
-  "component": true,
   "usingComponents": {
+    "mescroll-uni": "/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-uni",
     "load-refresh": "/components/uniapp/load-refresh/load-refresh",
     "nothing": "/components/nothing"
-  }
+  },
+  "component": true
 }

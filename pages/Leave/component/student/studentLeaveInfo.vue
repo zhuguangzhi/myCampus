@@ -1,17 +1,25 @@
 <template>
 	<view class="studentLeaveInfo" v-if="!openNothing">
-		<loadRefresh
+		<!-- <loadRefresh
 			ref="loadRefresh"
 			:isRefresh="true"
 			refreshType="halfCircle"
 			color="#174B89"
-			:heightReduce="statusHeight"
 			:currentPage="currentPage"
 			:totalPages="totalPages" 
 			@loadMore="loadMore" 
 			@refresh="refresh"
+		> -->
+		<mescroll-uni
+			@init="mescrollInit"
+			@up="loadMore" 
+			@down="refresh" 
+			:down="downOption" 
+			:up="upOption" 
+			height="100%"
+			BGC="#F1F6F9"
 		>
-			<view class="card" slot="content-list" v-for="(item,index) in leaveList" :key="index" @click="toLeaveInfo(item.id)">
+			<view class="card" v-for="(item,index) in leaveList" :key="index" @click="toLeaveInfo(item.id)">
 				<text class="point" :style="{backgroundColor: item.leave_type==='病假'?'red':'#F3A44D'}"></text>
 				<text class="LeaveType">{{item.leave_type}}</text>
 				<view class="timeSlot">
@@ -26,7 +34,7 @@
 						
 				</view>
 			</view>
-		</loadRefresh>
+		</mescroll-uni>
 	</view>
 	<nothing msg="暂无请假记录" v-else/>
 </template>
@@ -49,20 +57,33 @@
 				currentPage:1,
 				totalPages:1,
 				leaveList:[],
-				// 状态栏高度
-				statusHeight:null,
-				openNothing:false
+				openNothing:false,
+				mescroll:[],
+				downOption:{
+					use:true,
+					auto:false,
+				},
+				upOption:{
+					use:true,
+					auto:false,
+					isBounce:true,
+					page:{num:this.currentPage,size:10},
+					isBounce:true,
+				},
 			}
 		},
 		created() {
-			this.statusHeight = getStorage('systemStatusHeight')
-			// showLoading();
+			showLoading();
 			this.getLeaveData()
 		},
 		methods:{
+			mescrollInit(e){
+				this.mescroll = e
+			},
 			// 获取请假信息
 			async getLeaveData(){
 				let [err,res] = await leaveServer.getLeaveList(this.currentPage);
+				uni.hideLoading()
 				if(!this.$http.errorCheck(err,res)) return false;
 				let data = res.data.data;
 				// 设置总页数
@@ -73,14 +94,15 @@
 					this.leaveList.push(item);
 				})
 				// 关闭下拉动画
-				this.$refs.loadRefresh.completed();
+				this.$nextTick(()=>{
+					this.mescroll.endBySize(data.data.length, data.total)
+				})
 				if(data.data.length===0){
 					this.openNothing = true;
 				}else {
 					this.openNothing = false;
 				}
 				
-				uni.hideLoading()
 				
 			},
 			// 下拉刷新
@@ -136,7 +158,7 @@
 		margin: 20px 0;
 		border-radius: 10px;
 		background-color: #FFFFFF;
-		box-shadow: 0 0 6px 0px rgba(0, 0, 0, 0.3);
+		// box-shadow: 0 0 6px 0px rgba(0, 0, 0, 0.3);
 		z-index: 2;
 		.point {
 			display: inline-block;

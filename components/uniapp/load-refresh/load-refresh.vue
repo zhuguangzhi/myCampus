@@ -32,7 +32,7 @@
 			@touchstart="coverTouchstart"
 			@touchmove="coverTouchmove"
 			@touchend="coverTouchend">
-			<scroll-view scroll-y class="list" :scroll-top="scrollTop" @scrolltolower="loadMore" >
+			<scroll-view scroll-y class="list" :scroll-top="scrollTop" @scrolltolower="loadMore" :style="{minHeight:`calc(100vh - ${heightReduce}px)`}">
 				<!-- 数据集插槽 -->
 				<slot name="content-list"></slot>
 				<!-- 上拉加载 -->
@@ -43,6 +43,7 @@
 </template>
 
 <script>
+	import  { getStorage }  from '@/public/common/baseFn.js'
 	export default {
 		name: 'loadRefresh',
 		props: {
@@ -55,10 +56,6 @@
 				default: 'hollowDots'
 			},
 			fixedHeight: {
-				type: String,
-				default: '0'
-			},
-			heightReduce: {
 				type: String,
 				default: '0'
 			},
@@ -77,6 +74,10 @@
 			totalPages: {
 				type: Number,
 				default: 0
+			},
+			heightReduce: {
+				type: Number,
+				default: 0
 			}
 		},
 		data() {
@@ -89,7 +90,8 @@
 				scrollTop: -1,
 				coverTransform: 'translateY(0px)',
 				coverTransition: '0s',
-				playState: false // 动画的状态 暂停 paused/开始 running
+				playState: false, // 动画的状态 暂停 paused/开始 running
+				
 			}
 		},
 		computed: {
@@ -178,12 +180,13 @@
 		margin: 0;
 		padding: 0;
 		width: 100%;
+		background-color: #F1F6F9;
 		.cover-container{
 			width: 100%;
 			margin-top: -100rpx;
 			.list{
 				width: 100%;
-				min-height: 100vh;
+				background-color: #F1F6F9;
 				.load-more{
 					font-size: 20rpx;
 					text-align: center;

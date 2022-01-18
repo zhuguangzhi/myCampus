@@ -28,6 +28,7 @@
 			<input
 				class="mobileStyle"
 				type="text" 
+				style="width: 100%;"
 				v-model="form.to_place" 
 				placeholder-style="color:#999999;font-size:14px"
 				maxlength="15"
@@ -75,12 +76,12 @@
 		</view>
 		<view class="card">
 			<text class="point" style="background-color: #3AAF56;"></text>
-			<text class="LeaveType">审批人</text>
-			<text class="showMsg">{{form.headmasterName}}</text>
+			<text class="LeaveType">当前审批人</text>
+			<text class="showMsg">{{form.teacher_list.name}}</text>
 		</view>
 		<view class="btn" v-if="!disabled">
 			<text @click="saveSecretary()">保存为草稿</text>
-			<text @click="submitLeave()">提交</text>
+			<text @tap="requestSubscribe()">提交</text>
 		</view>
 		<view v-else>
 			<view class="card">
@@ -106,6 +107,7 @@
 </template>
 
 <script>
+	import baseConfig from '@/public/config/BaseConfig.js'
 	export default {
 		props:{
 			disabled:{
@@ -157,6 +159,15 @@
 				}
 				return res;
 			},
+			// 审批结果订阅
+			async requestSubscribe(){
+				await uni.requestSubscribeMessage({
+					tmplIds:baseConfig.subscribeLeaveResult,
+					success:(res)=>{
+						this.submitLeave();
+					}
+				})
+			}
 		}
 	}
 </script>

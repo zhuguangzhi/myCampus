@@ -97,6 +97,25 @@
             }
             
         }
+        ,{
+            "path" : "pages/Leave/Mine/searchLeaveApply",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "请假审批",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/DivideLeave/DivideLeave",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "销假",
+				"app-plus" : {"bounce" : "none" },
+				"mp-alipay":{"allowsBounceVertical":"NO"} // 取消支付宝和钉钉小程序的iOS回弹,避免与下拉刷新冲突 (可统一配在 'globalStyle')
+            }
+            
+        }
     ],
 	"tabBar": {
 		"color": "#000000",

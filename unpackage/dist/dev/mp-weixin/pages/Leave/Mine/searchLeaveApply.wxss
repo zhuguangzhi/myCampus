@@ -1,0 +1,29 @@
+.data-v-c27ba80c:root {
+	--fontSize-16:16px;
+	--color: #174B89;
+}
+.base.data-v-c27ba80c {
+	padding: 0 10;
+	line-height: 100%;
+	text-align: center;
+	font-size: var(--fontSize-16);
+}
+.icon.data-v-c27ba80c {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	margin-right: 10px;
+	vertical-align: top;
+}
+.leave.data-v-c27ba80c {
+  width: 100vw;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.btnText.data-v-c27ba80c {
+  display: inline-block;
+  flex: 1;
+  width: 49%;
+  height: 100%;
+}
+

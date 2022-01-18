@@ -29,10 +29,11 @@
 		methods:{
 			async submit(){
 				let err,res
-				let userId = UserConfig.userInfo.userId
+				let userId = this.$store.getters.getUserInfo['userId']
 				if(this.clock){
 					// 校验密码
 					[err,res]=await loginServer.checkPassword(userId,this.oldPassword);
+					console.log(res)
 					if(!this.$http.errorCheck(err,res)) {
 						this.oldPassword = ''
 						return false

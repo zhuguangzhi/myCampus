@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "请假审批",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "leave-list": "/pages/Leave/component/teacher/leaveList"
+  }
+}

@@ -36,9 +36,9 @@
 				if(!this.$http.errorCheck(err,res)) return false;
 				let data = res.data.data
 				let userInfo = UserConfig.userInfo;
-				data.headmasterName = userInfo.class_list.headmaster.name
 				data.leave_time = hToD(data.leave_time);
 				this.leaveInfo = data;
+				console.log(data)
 				uni.hideLoading();
 			},
 			

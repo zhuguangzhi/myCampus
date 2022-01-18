@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "销假",
+  "usingComponents": {
+    "leave-list": "/pages/Leave/component/teacher/leaveList"
+  }
+}

@@ -1,5 +1,8 @@
 {
   "navigationBarTitleText": "创建签到",
   "enablePullDownRefresh": false,
-  "usingComponents": {}
+  "usingComponents": {
+    "drop-down": "/components/uniapp/wyb-drop-down/wyb-drop-down",
+    "nothing": "/components/nothing"
+  }
 }

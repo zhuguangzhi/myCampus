@@ -1,5 +1,6 @@
 <template>
 	<view class="searchLeaveInfo">
+		123123
 		<!-- <tabControl 
 			:current="1" 
 			:lineWidth="70" 

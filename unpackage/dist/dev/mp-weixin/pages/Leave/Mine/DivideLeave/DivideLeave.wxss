@@ -1,0 +1,31 @@
+.data-v-7dcb217c:root {
+	--fontSize-16:16px;
+	--color: #174B89;
+}
+.base.data-v-7dcb217c {
+	padding: 0 10;
+	line-height: 100%;
+	text-align: center;
+	font-size: var(--fontSize-16);
+}
+.icon.data-v-7dcb217c {
+	display: inline-block;
+	width: 25px;
+	height: 25px;
+	margin-right: 10px;
+	vertical-align: top;
+}
+.teacher.data-v-7dcb217c,
+.studens.data-v-7dcb217c {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 0 15px;
+}
+.btnText.data-v-7dcb217c {
+  display: inline-block;
+  flex: 1;
+  width: 49%;
+  height: 100%;
+}
+

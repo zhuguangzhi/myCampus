@@ -28,6 +28,7 @@
   margin: 0;
   padding: 0;
   width: 100%;
+  background-color: #F1F6F9;
 }
 .load-refresh .cover-container.data-v-719de0e8 {
   width: 100%;
@@ -35,7 +36,7 @@
 }
 .load-refresh .cover-container .list.data-v-719de0e8 {
   width: 100%;
-  min-height: 100vh;
+  background-color: #F1F6F9;
 }
 .load-refresh .cover-container .list .load-more.data-v-719de0e8 {
   font-size: 20rpx;
