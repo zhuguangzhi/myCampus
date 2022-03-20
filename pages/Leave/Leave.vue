@@ -1,15 +1,14 @@
 <template>
 	<view class="LeaveContent">
 		<view class="UserInfo">
-			<view class="photo">
-				<image v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" mode="aspectFill"></image>
-				<image v-else :src="defaultPhoto" mode="aspectFill"></image>
+			<view class="photo" @click="changePhoto()">
+				<image :src="userInfo.avatarUrl" mode="aspectFill"></image>
 			</view>
 			<view class="info">
 				<view class="line1">
 					<text class="name">{{userInfo.name}}</text>
 					<text class="sign">{{computedIdentity}}</text>
-					<text class="userSet">个人空间 ></text>
+					<text class="userSet" @click="mySpace()">个人空间 ></text>
 				</view>
 				<view v-if="!userInfo.isTeacher" class="line2">
 					<text>{{userInfo.class_list.name}}</text>
@@ -54,6 +53,7 @@
 	import User from '@/public/config/user.js'
 	import BaseConfig from '@/public/config/BaseConfig.js'
 	import  { toPage }  from '@/public/common/baseFn.js'
+	import loginServe from '@/public/api/login.js'
 	export default {
 		name:'Leave',
 		created() {
@@ -63,13 +63,10 @@
 		data() {
 			return {
 				userInfo:null,
-				defaultPhoto:BaseConfig.staticUrl+'/image/defaultPhoto.jpeg',
 				severList:[
 					'请假信息',
 					'考勤记录',
-					'动态收藏',
-					'动态历史',
-					'我的消息'
+					'动态收藏'
 				]
 			}
 		},
@@ -90,8 +87,17 @@
 					case 0:
 						page = 'LeaveInfo';
 						break;
-					case 3:
-						page = 'Sign';
+					case 1:
+					// 考勤
+						if(this.userInfo.isTeacher){
+							// 老师
+						}else{
+							// 学生
+							page='Sign/StudentAttendanceRecord'
+						}
+						break;
+					case 2:
+						page='DynamicCollect?type=dynamicCollect'
 						break;
 					default:
 						return false;
@@ -110,6 +116,31 @@
 					route = ['toLeave','DivideLeave/DivideLeave','Sign/studentSign']
 				}
 				toPage(`/pages/Leave/Mine/${route[index - 1]}`)
+			},
+			// 更改头像
+			changePhoto(){
+				uni.showModal({
+					title: '更改头像',
+					content: '将微信头像用作于该小程序',
+					showCancel:false,
+					success:(res)=> {
+						uni.hideLoading();
+						uni.getUserProfile({
+							desc:'获取头像',
+							success:async (e)=> {
+								this.userInfo.avatarUrl = e.userInfo.avatarUrl
+								let [err,res] = await loginServe.changePhoto(e.userInfo.avatarUrl)
+								this.$http.errorCheck(err,res)
+							}
+						})
+				  }
+				})
+				
+			},
+			// 个人空间
+			mySpace(){
+				console.log('----')
+				toPage('/pages/Leave/Mine/mySpace/mySpace')
 			}
 		}
 	}

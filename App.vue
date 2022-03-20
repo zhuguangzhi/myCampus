@@ -4,4 +4,10 @@
 </script>
 <style>
 	/*每个页面公共css */
+	.emojiSize {
+		width:20px;
+		height:20px;
+		vertical-align: middle;
+		margin: 0 2px;
+	}
 </style>

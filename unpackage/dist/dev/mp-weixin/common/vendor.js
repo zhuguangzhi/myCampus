@@ -324,7 +324,7 @@ var promiseInterceptor = {
 
 
 var SYNC_API_RE =
-/^\$|Window$|WindowStyle$|sendNativeEvent|restoreGlobal|getCurrentSubNVue|getMenuButtonBoundingClientRect|^report|interceptors|Interceptor$|getSubNVueById|requireNativePlugin|upx2px|hideKeyboard|canIUse|^create|Sync$|Manager$|base64ToArrayBuffer|arrayBufferToBase64|getLocale|setLocale/;
+/^\$|Window$|WindowStyle$|sendHostEvent|sendNativeEvent|restoreGlobal|getCurrentSubNVue|getMenuButtonBoundingClientRect|^report|interceptors|Interceptor$|getSubNVueById|requireNativePlugin|upx2px|hideKeyboard|canIUse|^create|Sync$|Manager$|base64ToArrayBuffer|arrayBufferToBase64|getLocale|setLocale/;
 
 var CONTEXT_API_RE = /^create|Manager$/;
 
@@ -805,9 +805,15 @@ var customize = cached(function (str) {
 
 function initTriggerEvent(mpInstance) {
   var oldTriggerEvent = mpInstance.triggerEvent;
-  mpInstance.triggerEvent = function (event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
+  var newTriggerEvent = function newTriggerEvent(event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
     return oldTriggerEvent.apply(mpInstance, [customize(event)].concat(args));
   };
+  try {
+    // 京东小程序 triggerEvent 为只读
+    mpInstance.triggerEvent = newTriggerEvent;
+  } catch (error) {
+    mpInstance._triggerEvent = newTriggerEvent;
+  }
 }
 
 function initHook(name, options, isComponent) {
@@ -1380,11 +1386,33 @@ function handleEvent(event) {var _this = this;
   }
 }
 
+var messages = {};
+
 var locale;
 
 {
   locale = wx.getSystemInfoSync().language;
 }
+
+function initI18nMessages() {
+  if (!isEnableLocale()) {
+    return;
+  }
+  var localeKeys = Object.keys(__uniConfig.locales);
+  if (localeKeys.length) {
+    localeKeys.forEach(function (locale) {
+      var curMessages = messages[locale];
+      var userMessages = __uniConfig.locales[locale];
+      if (curMessages) {
+        Object.assign(curMessages, userMessages);
+      } else {
+        messages[locale] = userMessages;
+      }
+    });
+  }
+}
+
+initI18nMessages();
 
 var i18n = (0, _uniI18n.initVueI18n)(
 locale,
@@ -1427,6 +1455,19 @@ function initAppLocale(Vue, appVm, locale) {
     } });
 
 }
+
+function isEnableLocale() {
+  return typeof __uniConfig !== 'undefined' && __uniConfig.locales && !!Object.keys(__uniConfig.locales).length;
+}
+
+// export function initI18n() {
+//   const localeKeys = Object.keys(__uniConfig.locales || {})
+//   if (localeKeys.length) {
+//     localeKeys.forEach((locale) =>
+//       i18n.add(locale, __uniConfig.locales[locale])
+//     )
+//   }
+// }
 
 var eventChannels = {};
 
@@ -1946,17 +1987,17 @@ function createPlugin(vm) {
   var appOptions = parseApp(vm);
   if (isFn(appOptions.onShow) && wx.onAppShow) {
     wx.onAppShow(function () {for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {args[_key7] = arguments[_key7];}
-      appOptions.onShow.apply(vm, args);
+      vm.__call_hook('onShow', args);
     });
   }
   if (isFn(appOptions.onHide) && wx.onAppHide) {
     wx.onAppHide(function () {for (var _len8 = arguments.length, args = new Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {args[_key8] = arguments[_key8];}
-      appOptions.onHide.apply(vm, args);
+      vm.__call_hook('onHide', args);
     });
   }
   if (isFn(appOptions.onLaunch)) {
     var args = wx.getLaunchOptionsSync && wx.getLaunchOptionsSync();
-    appOptions.onLaunch.call(vm, args);
+    vm.__call_hook('onLaunch', args);
   }
   return vm;
 }
@@ -2247,6 +2288,12 @@ var _login = _interopRequireDefault(__webpack_require__(/*! ../api/login.js */ 2
     options.method = 'POST';
     return this.request(options);
   },
+  delete: function _delete(url) {var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    options.url = url;
+    options.data = data;
+    options.method = 'DELETE';
+    return this.request(options);
+  },
   // 错误处理
   errorCheck: function errorCheck(err, res) {var errfun = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;var resfun = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
     if (err) {
@@ -2256,6 +2303,7 @@ var _login = _interopRequireDefault(__webpack_require__(/*! ../api/login.js */ 2
     } else
     if (res.data.errorCode) {
       typeof errfun === 'function' && resfun();
+      console.log(res.data, '----------');
       // 判断是否是登录失败
       if (res.data.errorCode === 40003) {
         uni.showToast({ title: '登录已失效,2秒后跳至登录页', icon: "none" });
@@ -2282,44 +2330,19 @@ var _login = _interopRequireDefault(__webpack_require__(/*! ../api/login.js */ 2
   },
 
   // 上传
-  upload: function upload(url) {var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    options.url = this.config.baseUrl + url;
+  uploadImage: function uploadImage() {var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    options.url = this.config.baseUrl + '/uploadImage';
     options.header = options.header || this.config.header;
-    options.fileType = options.fileType || 'image';
+    options.fileType = options.fileType || 'multipart/form-data';
     options.formData = options.formData || {};
     options.filePath = options.filePath;
-    options.data = options.data || {};
-    if (options.token) {
-      options.header.token = _user.default.userInfo.token;
-    }
+    options.formData = options.data || {};
+    options.formData['userId'] = _user.default.userInfo.userId;
+    options.header.token = _user.default.userInfo.token;
+    console.log(options);
     return uni.uploadFile(options);
   } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
-
-/***/ }),
-
-/***/ 129:
-/*!*******************************************!*\
-  !*** E:/code/myCampus/public/api/face.js ***!
-  \*******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _request = _interopRequireDefault(__webpack_require__(/*! ../common/request.js */ 12));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
-faceServers = /*#__PURE__*/function () {function faceServers() {_classCallCheck(this, faceServers);}_createClass(faceServers, null, [{ key: "createFace",
-    // 创建人脸
-    value: function createFace(params) {
-      if (params) {
-        return _request.default.post('/face/createFace', params);
-      }
-    }
-    // 人脸核验
-  }, { key: "checkFace", value: function checkFace(params) {
-      if (params) {
-        return _request.default.post('/face/checkFace', params);
-      }
-    } }]);return faceServers;}();exports.default = faceServers;
 
 /***/ }),
 
@@ -2333,7 +2356,7 @@ faceServers = /*#__PURE__*/function () {function faceServers() {_classCallCheck(
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
   webUrl: 'https://mycampus.xiaopang.cool/api/v1',
-  staticUrl: 'https://mycampus.xiaopang.cool/static',
+  staticUrl: 'https://mycampus.xiaopang.cool/',
   websocketUrl: 'wss://mycampus.xiaopang.cool/wss',
   storageRoot: 'myCampus',
   // 高德
@@ -2347,120 +2370,47 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 /***/ }),
 
-/***/ 137:
-/*!************************************************************!*\
-  !*** E:/code/myCampus/components/uniapp/xp-picker/util.js ***!
-  \************************************************************/
+/***/ 130:
+/*!*******************************************!*\
+  !*** E:/code/myCampus/public/api/post.js ***!
+  \*******************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.templateFactory = templateFactory;exports.getDate = getDate;exports.getLocalTime = getLocalTime;exports.fmtNumber = fmtNumber;exports.time2Timestamp = time2Timestamp;function _createForOfIteratorHelper(o, allowArrayLike) {var it;if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {if (it) o = it;var i = 0;var F = function F() {};return { s: F, n: function n() {if (i >= o.length) return { done: true };return { done: false, value: o[i++] };}, e: function e(_e2) {throw _e2;}, f: F };}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}var normalCompletion = true,didErr = false,err;return { s: function s() {it = o[Symbol.iterator]();}, n: function n() {var step = it.next();normalCompletion = step.done;return step;}, e: function e(_e3) {didErr = true;err = _e3;}, f: function f() {try {if (!normalCompletion && it.return != null) it.return();} finally {if (didErr) throw err;}} };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}var isLeapYear = function isLeapYear(y) {return y % 4 == 0 && y % 100 != 0 || y % 100 == 0 && y % 400 == 0;};
-var variables = {
-  y: {
-    text: "年",
-    range: [null, null] },
-
-  m: {
-    text: "月",
-    range: [1, 12] },
-
-  d: {
-    text: "日",
-    range: [1, 31] },
-
-  h: {
-    text: "时",
-    range: [0, 23] },
-
-  i: {
-    text: "分",
-    range: [0, 59] },
-
-  s: {
-    text: "秒",
-    range: [0, 59] } };
-
-
-function templateFactory(_ref)
-
-
-
-{var mode = _ref.mode,value = _ref.value,yearRange = _ref.yearRange;var _yearRange = _slicedToArray(
-  yearRange, 2),start = _yearRange[0],end = _yearRange[1];
-  var ret = {};var _iterator = _createForOfIteratorHelper(
-  mode),_step;try {for (_iterator.s(); !(_step = _iterator.n()).done;) {var key = _step.value;
-      ret[key] = variables[key];
-    }} catch (err) {_iterator.e(err);} finally {_iterator.f();}
-  if (mode.indexOf("y") !== -1) ret['y'].range = [start || 2016, end || new Date().getFullYear()];
-  if (mode.indexOf("d") !== -1) {
-    var date = getDate(value || getLocalTime(mode));
-    ret['d'].range = [1, date];
-  }
-  return ret;
-}
-function getDate(dt) {
-  var s = dt.substring(0, dt.lastIndexOf("-"));
-  var year, month;
-  var d = new Date();
-  switch (s.length) {
-    case 0:
-      year = d.getFullYear();
-      month = d.getMonth() + 1;
-      break;
-    case 2:
-      year = d.getFullYear();
-      month = parseInt(s);
-      break;
-    default:var _s$split =
-      s.split("-"),_s$split2 = _slicedToArray(_s$split, 2),y = _s$split2[0],m = _s$split2[1];
-      year = parseInt(y);
-      month = parseInt(m);
-      break;}
-
-  var days = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  return days[month - 1];
-}
-function getLocalTime(fmt) {
-  if (!fmt) return null;
-  var da = new Date();
-  var y = fmtNumber(da.getFullYear()),
-  m = fmtNumber(da.getMonth() + 1),
-  d = fmtNumber(da.getDate()),
-  h = fmtNumber(da.getHours()),
-  i = fmtNumber(da.getMinutes()),
-  s = fmtNumber(da.getSeconds());
-  var types = {
-    'y': "".concat(y),
-    'm': "".concat(m),
-    'd': "".concat(d),
-    'h': "".concat(h),
-    'i': "".concat(i),
-    's': "".concat(s),
-    'ym': "".concat(y, "-").concat(m),
-    'md': "".concat(m, "-").concat(d),
-    'hi': "".concat(h, ":").concat(i),
-    'is': "".concat(i, ":").concat(s),
-    'ymd': "".concat(y, "-").concat(m, "-").concat(d),
-    'his': "".concat(h, ":").concat(i, ":").concat(s),
-    'mdh': "".concat(m, "-").concat(d, " ").concat(h),
-    'ymdh': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h),
-    'mdhi': "".concat(m, "-").concat(d, " ").concat(h, ":").concat(i),
-    'mdhis': "".concat(m, "-").concat(d, " ").concat(h, ":").concat(m, ":").concat(s),
-    'yd': "".concat(y, "-").concat(d),
-    'ymdhi': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h, ":").concat(i),
-    'ymdhis': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h, ":").concat(i, ":").concat(s) };
-
-  return types[fmt];
-}
-function fmtNumber(n) {
-  // return n.toString().padStart(2,"0")
-  return n > 9 ? n + "" : "0" + n;
-}
-function time2Timestamp(timer) {
-  var date = new Date(timer);
-  return date.getTime();
-}
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _request = _interopRequireDefault(__webpack_require__(/*! ../common/request.js */ 12));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
+postServers = /*#__PURE__*/function () {function postServers() {_classCallCheck(this, postServers);}_createClass(postServers, null, [{ key: "createPost", value: function createPost(
+    content, limit) {
+      return _request.default.post('/createPost', { content: content, limit: limit }, { 'token': true });
+    }
+    // 动态获取
+  }, { key: "getPostList", value: function getPostList(page, type) {
+      return _request.default.get('/getPostList', { page: page, type: type }, { 'token': true });
+    }
+    // 发评论
+  }, { key: "creatComment", value: function creatComment(postId, content, replyId) {
+      return _request.default.post('/creatComment', {
+        postId: postId, content: content, replyId: replyId },
+      { 'token': true });
+    }
+    // 评论获取
+  }, { key: "getComment", value: function getComment(postId, page) {
+      return _request.default.get('/getComment', {
+        postId: postId, page: page },
+      { 'token': true });
+    }
+    // 动态收藏
+  }, { key: "collectPost", value: function collectPost(id) {
+      return _request.default.post('/collectPost', { 'postId': id }, { token: true });
+    }
+    // 动态收藏移除
+  }, { key: "removePost", value: function removePost(postId) {
+      return _request.default.delete('/removePost', { postId: postId }, { token: true });
+    }
+    // 删除动态
+  }, { key: "deletePost", value: function deletePost(id) {
+      return _request.default.delete('/deletePost', { id: id }, { token: true });
+    } }]);return postServers;}();exports.default = postServers;
 
 /***/ }),
 
@@ -2487,7 +2437,7 @@ var userInfo = (0, _baseFn.getStorage)('userInfo');var _default =
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.showModel = exports.getreverseGeocode = exports.delStorage = exports.toPage = exports.sleep = exports.showLoading = exports.getStorage = exports.setStorage = exports.message = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.previewImage = exports.showModel = exports.getreverseGeocode = exports.delStorage = exports.toPage = exports.sleep = exports.showLoading = exports.getStorage = exports.setStorage = exports.message = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));
 var _amapWx = _interopRequireDefault(__webpack_require__(/*! @/lib/amap-wx.js */ 19));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}
 
 var root = _BaseConfig.default.storageRoot;
@@ -2567,7 +2517,6 @@ exports.showLoading = showLoading;var getreverseGeocode = function getreverseGeo
       // 获取省名+市名
       var str = data[0].regeocodeData.addressComponent.province + data[0].regeocodeData.addressComponent.city;
       var address = data[0].regeocodeData.formatted_address;
-      console.log(data[0]);
       address = address.replace(str, '');
       that.address = address;
     },
@@ -2588,7 +2537,44 @@ exports.getreverseGeocode = getreverseGeocode;var showModel = /*#__PURE__*/funct
               cancelColor: '#999999' };_context.next = 3;return (
 
               uni.showModal(options));case 3:return _context.abrupt("return", _context.sent);case 4:case "end":return _context.stop();}}}, _callee);}));return function showModel(_x) {return _ref.apply(this, arguments);};}();exports.showModel = showModel;
+
+var previewImage = function previewImage(index, imgList) {
+  // 图片预览
+  uni.previewImage({
+    urls: imgList,
+    current: imgList[index],
+    longPressActions: {
+      itemList: ['保存图片'] } });
+
+
+
+};exports.previewImage = previewImage;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+
+/***/ 158:
+/*!*******************************************!*\
+  !*** E:/code/myCampus/public/api/face.js ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _request = _interopRequireDefault(__webpack_require__(/*! ../common/request.js */ 12));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
+faceServers = /*#__PURE__*/function () {function faceServers() {_classCallCheck(this, faceServers);}_createClass(faceServers, null, [{ key: "createFace",
+    // 创建人脸
+    value: function createFace(params) {
+      if (params) {
+        return _request.default.post('/face/createFace', params);
+      }
+    }
+    // 人脸核验
+  }, { key: "checkFace", value: function checkFace(params) {
+      if (params) {
+        return _request.default.post('/face/checkFace', params);
+      }
+    } }]);return faceServers;}();exports.default = faceServers;
 
 /***/ }),
 
@@ -3383,6 +3369,123 @@ if (hadRuntime) {
 
 /***/ }),
 
+/***/ 180:
+/*!************************************************************!*\
+  !*** E:/code/myCampus/components/uniapp/xp-picker/util.js ***!
+  \************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.templateFactory = templateFactory;exports.getDate = getDate;exports.getLocalTime = getLocalTime;exports.fmtNumber = fmtNumber;exports.time2Timestamp = time2Timestamp;function _createForOfIteratorHelper(o, allowArrayLike) {var it;if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {if (it) o = it;var i = 0;var F = function F() {};return { s: F, n: function n() {if (i >= o.length) return { done: true };return { done: false, value: o[i++] };}, e: function e(_e2) {throw _e2;}, f: F };}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}var normalCompletion = true,didErr = false,err;return { s: function s() {it = o[Symbol.iterator]();}, n: function n() {var step = it.next();normalCompletion = step.done;return step;}, e: function e(_e3) {didErr = true;err = _e3;}, f: function f() {try {if (!normalCompletion && it.return != null) it.return();} finally {if (didErr) throw err;}} };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}var isLeapYear = function isLeapYear(y) {return y % 4 == 0 && y % 100 != 0 || y % 100 == 0 && y % 400 == 0;};
+var variables = {
+  y: {
+    text: "年",
+    range: [null, null] },
+
+  m: {
+    text: "月",
+    range: [1, 12] },
+
+  d: {
+    text: "日",
+    range: [1, 31] },
+
+  h: {
+    text: "时",
+    range: [0, 23] },
+
+  i: {
+    text: "分",
+    range: [0, 59] },
+
+  s: {
+    text: "秒",
+    range: [0, 59] } };
+
+
+function templateFactory(_ref)
+
+
+
+{var mode = _ref.mode,value = _ref.value,yearRange = _ref.yearRange;var _yearRange = _slicedToArray(
+  yearRange, 2),start = _yearRange[0],end = _yearRange[1];
+  var ret = {};var _iterator = _createForOfIteratorHelper(
+  mode),_step;try {for (_iterator.s(); !(_step = _iterator.n()).done;) {var key = _step.value;
+      ret[key] = variables[key];
+    }} catch (err) {_iterator.e(err);} finally {_iterator.f();}
+  if (mode.indexOf("y") !== -1) ret['y'].range = [start || 2016, end || new Date().getFullYear()];
+  if (mode.indexOf("d") !== -1) {
+    var date = getDate(value || getLocalTime(mode));
+    ret['d'].range = [1, date];
+  }
+  return ret;
+}
+function getDate(dt) {
+  var s = dt.substring(0, dt.lastIndexOf("-"));
+  var year, month;
+  var d = new Date();
+  switch (s.length) {
+    case 0:
+      year = d.getFullYear();
+      month = d.getMonth() + 1;
+      break;
+    case 2:
+      year = d.getFullYear();
+      month = parseInt(s);
+      break;
+    default:var _s$split =
+      s.split("-"),_s$split2 = _slicedToArray(_s$split, 2),y = _s$split2[0],m = _s$split2[1];
+      year = parseInt(y);
+      month = parseInt(m);
+      break;}
+
+  var days = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return days[month - 1];
+}
+function getLocalTime(fmt) {
+  if (!fmt) return null;
+  var da = new Date();
+  var y = fmtNumber(da.getFullYear()),
+  m = fmtNumber(da.getMonth() + 1),
+  d = fmtNumber(da.getDate()),
+  h = fmtNumber(da.getHours()),
+  i = fmtNumber(da.getMinutes()),
+  s = fmtNumber(da.getSeconds());
+  var types = {
+    'y': "".concat(y),
+    'm': "".concat(m),
+    'd': "".concat(d),
+    'h': "".concat(h),
+    'i': "".concat(i),
+    's': "".concat(s),
+    'ym': "".concat(y, "-").concat(m),
+    'md': "".concat(m, "-").concat(d),
+    'hi': "".concat(h, ":").concat(i),
+    'is': "".concat(i, ":").concat(s),
+    'ymd': "".concat(y, "-").concat(m, "-").concat(d),
+    'his': "".concat(h, ":").concat(i, ":").concat(s),
+    'mdh': "".concat(m, "-").concat(d, " ").concat(h),
+    'ymdh': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h),
+    'mdhi': "".concat(m, "-").concat(d, " ").concat(h, ":").concat(i),
+    'mdhis': "".concat(m, "-").concat(d, " ").concat(h, ":").concat(m, ":").concat(s),
+    'yd': "".concat(y, "-").concat(d),
+    'ymdhi': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h, ":").concat(i),
+    'ymdhis': "".concat(y, "-").concat(m, "-").concat(d, " ").concat(h, ":").concat(i, ":").concat(s) };
+
+  return types[fmt];
+}
+function fmtNumber(n) {
+  // return n.toString().padStart(2,"0")
+  return n > 9 ? n + "" : "0" + n;
+}
+function time2Timestamp(timer) {
+  var date = new Date(timer);
+  return date.getTime();
+}
+
+/***/ }),
+
 /***/ 19:
 /*!***************************************!*\
   !*** E:/code/myCampus/lib/amap-wx.js ***!
@@ -3465,1041 +3568,12 @@ loginServe = /*#__PURE__*/function () {function loginServe() {_classCallCheck(th
     // 重置密码
   }, { key: "revisePassword", value: function revisePassword(userId, password) {
       return _request.default.post('/revisePassword', { userId: userId, password: password });
+    }
+    //    修改头像
+  }, { key: "changePhoto", value: function changePhoto(avatarUrl) {
+      return _request.default.post('/changePhoto', { 'avatarUrl': avatarUrl }, { 'token': true });
     } }]);return loginServe;}();exports.default = loginServe;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
-
-/***/ }),
-
-/***/ 201:
-/*!*****************************************************************************************!*\
-  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-uni.js ***!
-  \*****************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = MeScroll; /* mescroll
-                                                                                                        * version 1.3.7
-                                                                                                        * 2021-04-12 wenju
-                                                                                                        * https://www.mescroll.com
-                                                                                                        */
-
-function MeScroll(options, isScrollBody) {
-  var me = this;
-  me.version = '1.3.7'; // mescroll版本号
-  me.options = options || {}; // 配置
-  me.isScrollBody = isScrollBody || false; // 滚动区域是否为原生页面滚动; 默认为scroll-view
-
-  me.isDownScrolling = false; // 是否在执行下拉刷新的回调
-  me.isUpScrolling = false; // 是否在执行上拉加载的回调
-  var hasDownCallback = me.options.down && me.options.down.callback; // 是否配置了down的callback
-
-  // 初始化下拉刷新
-  me.initDownScroll();
-  // 初始化上拉加载,则初始化
-  me.initUpScroll();
-
-  // 自动加载
-  setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
-    // 自动触发下拉刷新 (只有配置了down的callback才自动触发下拉刷新)
-    if ((me.optDown.use || me.optDown.native) && me.optDown.auto && hasDownCallback) {
-      if (me.optDown.autoShowLoading) {
-        me.triggerDownScroll(); // 显示下拉进度,执行下拉回调
-      } else {
-        me.optDown.callback && me.optDown.callback(me); // 不显示下拉进度,直接执行下拉回调
-      }
-    }
-    // 自动触发上拉加载
-    if (!me.isUpAutoLoad) {// 部分小程序(头条小程序)emit是异步, 会导致isUpAutoLoad判断有误, 先延时确保先执行down的callback,再执行up的callback
-      setTimeout(function () {
-        me.optUp.use && me.optUp.auto && !me.isUpAutoLoad && me.triggerUpScroll();
-      }, 100);
-    }
-  }, 30); // 需让me.optDown.inited和me.optUp.inited先执行
-}
-
-/* 配置参数:下拉刷新 */
-MeScroll.prototype.extendDownScroll = function (optDown) {
-  // 下拉刷新的配置
-  MeScroll.extend(optDown, {
-    use: true, // 是否启用下拉刷新; 默认true
-    auto: true, // 是否在初始化完毕之后自动执行下拉刷新的回调; 默认true
-    native: false, // 是否使用系统自带的下拉刷新; 默认false; 仅mescroll-body生效 (值为true时,还需在pages配置enablePullDownRefresh:true;详请参考mescroll-native的案例)
-    autoShowLoading: false, // 如果设置auto=true(在初始化完毕之后自动执行下拉刷新的回调),那么是否显示下拉刷新的进度; 默认false
-    isLock: false, // 是否锁定下拉刷新,默认false;
-    offset: 80, // 在列表顶部,下拉大于80px,松手即可触发下拉刷新的回调
-    startTop: 100, // scroll-view快速滚动到顶部时,此时的scroll-top可能大于0, 此值用于控制最大的误差
-    inOffsetRate: 1, // 在列表顶部,下拉的距离小于offset时,改变下拉区域高度比例;值小于1且越接近0,高度变化越小,表现为越往下越难拉
-    outOffsetRate: 0.2, // 在列表顶部,下拉的距离大于offset时,改变下拉区域高度比例;值小于1且越接近0,高度变化越小,表现为越往下越难拉
-    bottomOffset: 20, // 当手指touchmove位置在距离body底部20px范围内的时候结束上拉刷新,避免Webview嵌套导致touchend事件不执行
-    minAngle: 45, // 向下滑动最少偏移的角度,取值区间  [0,90];默认45度,即向下滑动的角度大于45度则触发下拉;而小于45度,将不触发下拉,避免与左右滑动的轮播等组件冲突;
-    textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
-    textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
-    textLoading: '加载中 ...', // 加载中的提示文本
-    textSuccess: '加载成功', // 加载成功的文本
-    textErr: '加载失败', // 加载失败的文本
-    beforeEndDelay: 0, // 延时结束的时长 (显示加载成功/失败的时长, android小程序设置此项结束下拉会卡顿, 配置后请注意测试)
-    bgColor: "transparent", // 背景颜色 (建议在pages.json中再设置一下backgroundColorTop)
-    textColor: "gray", // 文本颜色 (当bgColor配置了颜色,而textColor未配置时,则textColor会默认为白色)
-    inited: null, // 下拉刷新初始化完毕的回调
-    inOffset: null, // 下拉的距离进入offset范围内那一刻的回调
-    outOffset: null, // 下拉的距离大于offset那一刻的回调
-    onMoving: null, // 下拉过程中的回调,滑动过程一直在执行; rate下拉区域当前高度与指定距离的比值(inOffset: rate<1; outOffset: rate>=1); downHight当前下拉区域的高度
-    beforeLoading: null, // 准备触发下拉刷新的回调: 如果return true,将不触发showLoading和callback回调; 常用来完全自定义下拉刷新, 参考案例【淘宝 v6.8.0】
-    showLoading: null, // 显示下拉刷新进度的回调
-    afterLoading: null, // 显示下拉刷新进度的回调之后,马上要执行的代码 (如: 在wxs中使用)
-    beforeEndDownScroll: null, // 准备结束下拉的回调. 返回结束下拉的延时执行时间,默认0ms; 常用于结束下拉之前再显示另外一小段动画,才去隐藏下拉刷新的场景, 参考案例【dotJump】
-    endDownScroll: null, // 结束下拉刷新的回调
-    afterEndDownScroll: null, // 结束下拉刷新的回调,马上要执行的代码 (如: 在wxs中使用)
-    callback: function callback(mescroll) {
-      // 下拉刷新的回调;默认重置上拉加载列表为第一页
-      mescroll.resetUpScroll();
-    } });
-
-};
-
-/* 配置参数:上拉加载 */
-MeScroll.prototype.extendUpScroll = function (optUp) {
-  // 上拉加载的配置
-  MeScroll.extend(optUp, {
-    use: true, // 是否启用上拉加载; 默认true
-    auto: true, // 是否在初始化完毕之后自动执行上拉加载的回调; 默认true
-    isLock: false, // 是否锁定上拉加载,默认false;
-    isBoth: true, // 上拉加载时,如果滑动到列表顶部是否可以同时触发下拉刷新;默认true,两者可同时触发;
-    callback: null, // 上拉加载的回调;function(page,mescroll){ }
-    page: {
-      num: 0, // 当前页码,默认0,回调之前会加1,即callback(page)会从1开始
-      size: 10, // 每页数据的数量
-      time: null // 加载第一页数据服务器返回的时间; 防止用户翻页时,后台新增了数据从而导致下一页数据重复;
-    },
-    noMoreSize: 5, // 如果列表已无数据,可设置列表的总数量要大于等于5条才显示无更多数据;避免列表数据过少(比如只有一条数据),显示无更多数据会不好看
-    offset: 150, // 距底部多远时,触发upCallback,仅mescroll-uni生效 ( mescroll-body配置的是pages.json的 onReachBottomDistance )
-    textLoading: '加载中 ...', // 加载中的提示文本
-    textNoMore: '-- END --', // 没有更多数据的提示文本
-    bgColor: "transparent", // 背景颜色 (建议在pages.json中再设置一下backgroundColorBottom)
-    textColor: "gray", // 文本颜色 (当bgColor配置了颜色,而textColor未配置时,则textColor会默认为白色)
-    inited: null, // 初始化完毕的回调
-    showLoading: null, // 显示加载中的回调
-    showNoMore: null, // 显示无更多数据的回调
-    hideUpScroll: null, // 隐藏上拉加载的回调
-    errDistance: 60, // endErr的时候需往上滑动一段距离,使其往下滑动时再次触发onReachBottom,仅mescroll-body生效
-    toTop: {
-      // 回到顶部按钮,需配置src才显示
-      src: null, // 图片路径,默认null (绝对路径或网络图)
-      offset: 1000, // 列表滚动多少距离才显示回到顶部按钮,默认1000
-      duration: 300, // 回到顶部的动画时长,默认300ms (当值为0或300则使用系统自带回到顶部,更流畅; 其他值则通过step模拟,部分机型可能不够流畅,所以非特殊情况不建议修改此项)
-      btnClick: null, // 点击按钮的回调
-      onShow: null, // 是否显示的回调
-      zIndex: 9990, // fixed定位z-index值
-      left: null, // 到左边的距离, 默认null. 此项有值时,right不生效. (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
-      right: 20, // 到右边的距离, 默认20 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
-      bottom: 120, // 到底部的距离, 默认120 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
-      safearea: false, // bottom的偏移量是否加上底部安全区的距离, 默认false, 需要适配iPhoneX时使用 (具体的界面如果不配置此项,则取本vue的safearea值)
-      width: 72, // 回到顶部图标的宽度, 默认72 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
-      radius: "50%" // 圆角, 默认"50%" (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
-    },
-    empty: {
-      use: true, // 是否显示空布局
-      icon: null, // 图标路径
-      tip: '~ 暂无相关数据 ~', // 提示
-      btnText: '', // 按钮
-      btnClick: null, // 点击按钮的回调
-      onShow: null, // 是否显示的回调
-      fixed: false, // 是否使用fixed定位,默认false; 配置fixed为true,以下的top和zIndex才生效 (transform会使fixed失效,最终会降级为absolute)
-      top: "100rpx", // fixed定位的top值 (完整的单位值,如 "10%"; "100rpx")
-      zIndex: 99 // fixed定位z-index值
-    },
-    onScroll: false // 是否监听滚动事件
-  });
-};
-
-/* 配置参数 */
-MeScroll.extend = function (userOption, defaultOption) {
-  if (!userOption) return defaultOption;
-  for (var key in defaultOption) {
-    if (userOption[key] == null) {
-      var def = defaultOption[key];
-      if (def != null && typeof def === 'object') {
-        userOption[key] = MeScroll.extend({}, def); // 深度匹配
-      } else {
-        userOption[key] = def;
-      }
-    } else if (typeof userOption[key] === 'object') {
-      MeScroll.extend(userOption[key], defaultOption[key]); // 深度匹配
-    }
-  }
-  return userOption;
-};
-
-/* 简单判断是否配置了颜色 (非透明,非白色) */
-MeScroll.prototype.hasColor = function (color) {
-  if (!color) return false;
-  var c = color.toLowerCase();
-  return c != "#fff" && c != "#ffffff" && c != "transparent" && c != "white";
-};
-
-/* -------初始化下拉刷新------- */
-MeScroll.prototype.initDownScroll = function () {
-  var me = this;
-  // 配置参数
-  me.optDown = me.options.down || {};
-  if (!me.optDown.textColor && me.hasColor(me.optDown.bgColor)) me.optDown.textColor = "#fff"; // 当bgColor有值且textColor未设置,则textColor默认白色
-  me.extendDownScroll(me.optDown);
-
-  // 如果是mescroll-body且配置了native,则禁止自定义的下拉刷新
-  if (me.isScrollBody && me.optDown.native) {
-    me.optDown.use = false;
-  } else {
-    me.optDown.native = false; // 仅mescroll-body支持,mescroll-uni不支持
-  }
-
-  me.downHight = 0; // 下拉区域的高度
-
-  // 在页面中加入下拉布局
-  if (me.optDown.use && me.optDown.inited) {
-    // 初始化完毕的回调
-    setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
-      me.optDown.inited(me);
-    }, 0);
-  }
-};
-
-/* 列表touchstart事件 */
-MeScroll.prototype.touchstartEvent = function (e) {
-  if (!this.optDown.use) return;
-
-  this.startPoint = this.getPoint(e); // 记录起点
-  this.startTop = this.getScrollTop(); // 记录此时的滚动条位置
-  this.startAngle = 0; // 初始角度
-  this.lastPoint = this.startPoint; // 重置上次move的点
-  this.maxTouchmoveY = this.getBodyHeight() - this.optDown.bottomOffset; // 手指触摸的最大范围(写在touchstart避免body获取高度为0的情况)
-  this.inTouchend = false; // 标记不是touchend
-};
-
-/* 列表touchmove事件 */
-MeScroll.prototype.touchmoveEvent = function (e) {
-  if (!this.optDown.use) return;
-  var me = this;
-
-  var scrollTop = me.getScrollTop(); // 当前滚动条的距离
-  var curPoint = me.getPoint(e); // 当前点
-
-  var moveY = curPoint.y - me.startPoint.y; // 和起点比,移动的距离,大于0向下拉,小于0向上拉
-
-  // 向下拉 && 在顶部
-  // mescroll-body,直接判定在顶部即可
-  // scroll-view在滚动时不会触发touchmove,当触顶/底/左/右时,才会触发touchmove
-  // scroll-view滚动到顶部时,scrollTop不一定为0,也有可能大于0; 在iOS的APP中scrollTop可能为负数,不一定和startTop相等
-  if (moveY > 0 && (
-  me.isScrollBody && scrollTop <= 0 ||
-
-  !me.isScrollBody && (scrollTop <= 0 || scrollTop <= me.optDown.startTop && scrollTop === me.startTop)))
-  {
-    // 可下拉的条件
-    if (!me.inTouchend && !me.isDownScrolling && !me.optDown.isLock && (!me.isUpScrolling || me.isUpScrolling &&
-    me.optUp.isBoth)) {
-
-      // 下拉的初始角度是否在配置的范围内
-      if (!me.startAngle) me.startAngle = me.getAngle(me.lastPoint, curPoint); // 两点之间的角度,区间 [0,90]
-      if (me.startAngle < me.optDown.minAngle) return; // 如果小于配置的角度,则不往下执行下拉刷新
-
-      // 如果手指的位置超过配置的距离,则提前结束下拉,避免Webview嵌套导致touchend无法触发
-      if (me.maxTouchmoveY > 0 && curPoint.y >= me.maxTouchmoveY) {
-        me.inTouchend = true; // 标记执行touchend
-        me.touchendEvent(); // 提前触发touchend
-        return;
-      }
-
-      me.preventDefault(e); // 阻止默认事件
-
-      var diff = curPoint.y - me.lastPoint.y; // 和上次比,移动的距离 (大于0向下,小于0向上)
-
-      // 下拉距离  < 指定距离
-      if (me.downHight < me.optDown.offset) {
-        if (me.movetype !== 1) {
-          me.movetype = 1; // 加入标记,保证只执行一次
-          me.isDownEndSuccess = null; // 重置是否加载成功的状态 (wxs执行的是wxs.wxs)
-          me.optDown.inOffset && me.optDown.inOffset(me); // 进入指定距离范围内那一刻的回调,只执行一次
-          me.isMoveDown = true; // 标记下拉区域高度改变,在touchend重置回来
-        }
-        me.downHight += diff * me.optDown.inOffsetRate; // 越往下,高度变化越小
-
-        // 指定距离  <= 下拉距离
-      } else {
-        if (me.movetype !== 2) {
-          me.movetype = 2; // 加入标记,保证只执行一次
-          me.optDown.outOffset && me.optDown.outOffset(me); // 下拉超过指定距离那一刻的回调,只执行一次
-          me.isMoveDown = true; // 标记下拉区域高度改变,在touchend重置回来
-        }
-        if (diff > 0) {// 向下拉
-          me.downHight += diff * me.optDown.outOffsetRate; // 越往下,高度变化越小
-        } else {// 向上收
-          me.downHight += diff; // 向上收回高度,则向上滑多少收多少高度
-        }
-      }
-
-      me.downHight = Math.round(me.downHight); // 取整
-      var rate = me.downHight / me.optDown.offset; // 下拉区域当前高度与指定距离的比值
-      me.optDown.onMoving && me.optDown.onMoving(me, rate, me.downHight); // 下拉过程中的回调,一直在执行
-    }
-  }
-
-  me.lastPoint = curPoint; // 记录本次移动的点
-};
-
-/* 列表touchend事件 */
-MeScroll.prototype.touchendEvent = function (e) {
-  if (!this.optDown.use) return;
-  // 如果下拉区域高度已改变,则需重置回来
-  if (this.isMoveDown) {
-    if (this.downHight >= this.optDown.offset) {
-      // 符合触发刷新的条件
-      this.triggerDownScroll();
-    } else {
-      // 不符合的话 则重置
-      this.downHight = 0;
-      this.endDownScrollCall(this);
-    }
-    this.movetype = 0;
-    this.isMoveDown = false;
-  } else if (!this.isScrollBody && this.getScrollTop() === this.startTop) {// scroll-view到顶/左/右/底的滑动事件
-    var isScrollUp = this.getPoint(e).y - this.startPoint.y < 0; // 和起点比,移动的距离,大于0向下拉,小于0向上拉
-    // 上滑
-    if (isScrollUp) {
-      // 需检查滑动的角度
-      var angle = this.getAngle(this.getPoint(e), this.startPoint); // 两点之间的角度,区间 [0,90]
-      if (angle > 80) {
-        // 检查并触发上拉
-        this.triggerUpScroll(true);
-      }
-    }
-  }
-};
-
-/* 根据点击滑动事件获取第一个手指的坐标 */
-MeScroll.prototype.getPoint = function (e) {
-  if (!e) {
-    return {
-      x: 0,
-      y: 0 };
-
-  }
-  if (e.touches && e.touches[0]) {
-    return {
-      x: e.touches[0].pageX,
-      y: e.touches[0].pageY };
-
-  } else if (e.changedTouches && e.changedTouches[0]) {
-    return {
-      x: e.changedTouches[0].pageX,
-      y: e.changedTouches[0].pageY };
-
-  } else {
-    return {
-      x: e.clientX,
-      y: e.clientY };
-
-  }
-};
-
-/* 计算两点之间的角度: 区间 [0,90]*/
-MeScroll.prototype.getAngle = function (p1, p2) {
-  var x = Math.abs(p1.x - p2.x);
-  var y = Math.abs(p1.y - p2.y);
-  var z = Math.sqrt(x * x + y * y);
-  var angle = 0;
-  if (z !== 0) {
-    angle = Math.asin(y / z) / Math.PI * 180;
-  }
-  return angle;
-};
-
-/* 触发下拉刷新 */
-MeScroll.prototype.triggerDownScroll = function () {
-  if (this.optDown.beforeLoading && this.optDown.beforeLoading(this)) {
-    //return true则处于完全自定义状态
-  } else {
-    this.showDownScroll(); // 下拉刷新中...
-    !this.optDown.native && this.optDown.callback && this.optDown.callback(this); // 执行回调,联网加载数据
-  }
-};
-
-/* 显示下拉进度布局 */
-MeScroll.prototype.showDownScroll = function () {
-  this.isDownScrolling = true; // 标记下拉中
-  if (this.optDown.native) {
-    uni.startPullDownRefresh(); // 系统自带的下拉刷新
-    this.showDownLoadingCall(0); // 仍触发showLoading,因为上拉加载用到
-  } else {
-    this.downHight = this.optDown.offset; // 更新下拉区域高度
-    this.showDownLoadingCall(this.downHight); // 下拉刷新中...
-  }
-};
-
-MeScroll.prototype.showDownLoadingCall = function (downHight) {
-  this.optDown.showLoading && this.optDown.showLoading(this, downHight); // 下拉刷新中...
-  this.optDown.afterLoading && this.optDown.afterLoading(this, downHight); // 下拉刷新中...触发之后马上要执行的代码
-};
-
-/* 显示系统自带的下拉刷新时需要处理的业务 */
-MeScroll.prototype.onPullDownRefresh = function () {
-  this.isDownScrolling = true; // 标记下拉中
-  this.showDownLoadingCall(0); // 仍触发showLoading,因为上拉加载用到
-  this.optDown.callback && this.optDown.callback(this); // 执行回调,联网加载数据
-};
-
-/* 结束下拉刷新 */
-MeScroll.prototype.endDownScroll = function () {
-  if (this.optDown.native) {// 结束原生下拉刷新
-    this.isDownScrolling = false;
-    this.endDownScrollCall(this);
-    uni.stopPullDownRefresh();
-    return;
-  }
-  var me = this;
-  // 结束下拉刷新的方法
-  var endScroll = function endScroll() {
-    me.downHight = 0;
-    me.isDownScrolling = false;
-    me.endDownScrollCall(me);
-    if (!me.isScrollBody) {
-      me.setScrollHeight(0); // scroll-view重置滚动区域,使数据不满屏时仍可检查触发翻页
-      me.scrollTo(0, 0); // scroll-view需重置滚动条到顶部,避免startTop大于0时,对下拉刷新的影响
-    }
-  };
-  // 结束下拉刷新时的回调
-  var delay = 0;
-  if (me.optDown.beforeEndDownScroll) {
-    delay = me.optDown.beforeEndDownScroll(me); // 结束下拉刷新的延时,单位ms
-    if (me.isDownEndSuccess == null) delay = 0; // 没有执行加载中,则不延时
-  }
-  if (typeof delay === 'number' && delay > 0) {
-    setTimeout(endScroll, delay);
-  } else {
-    endScroll();
-  }
-};
-
-MeScroll.prototype.endDownScrollCall = function () {
-  this.optDown.endDownScroll && this.optDown.endDownScroll(this);
-  this.optDown.afterEndDownScroll && this.optDown.afterEndDownScroll(this);
-};
-
-/* 锁定下拉刷新:isLock=ture,null锁定;isLock=false解锁 */
-MeScroll.prototype.lockDownScroll = function (isLock) {
-  if (isLock == null) isLock = true;
-  this.optDown.isLock = isLock;
-};
-
-/* 锁定上拉加载:isLock=ture,null锁定;isLock=false解锁 */
-MeScroll.prototype.lockUpScroll = function (isLock) {
-  if (isLock == null) isLock = true;
-  this.optUp.isLock = isLock;
-};
-
-/* -------初始化上拉加载------- */
-MeScroll.prototype.initUpScroll = function () {
-  var me = this;
-  // 配置参数
-  me.optUp = me.options.up || { use: false };
-  if (!me.optUp.textColor && me.hasColor(me.optUp.bgColor)) me.optUp.textColor = "#fff"; // 当bgColor有值且textColor未设置,则textColor默认白色
-  me.extendUpScroll(me.optUp);
-
-  if (me.optUp.use === false) return; // 配置不使用上拉加载时,则不初始化上拉布局
-  me.optUp.hasNext = true; // 如果使用上拉,则默认有下一页
-  me.startNum = me.optUp.page.num + 1; // 记录page开始的页码
-
-  // 初始化完毕的回调
-  if (me.optUp.inited) {
-    setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
-      me.optUp.inited(me);
-    }, 0);
-  }
-};
-
-/*滚动到底部的事件 (仅mescroll-body生效)*/
-MeScroll.prototype.onReachBottom = function () {
-  if (this.isScrollBody && !this.isUpScrolling) {// 只能支持下拉刷新的时候同时可以触发上拉加载,否则滚动到底部就需要上滑一点才能触发onReachBottom
-    if (!this.optUp.isLock && this.optUp.hasNext) {
-      this.triggerUpScroll();
-    }
-  }
-};
-
-/*列表滚动事件 (仅mescroll-body生效)*/
-MeScroll.prototype.onPageScroll = function (e) {
-  if (!this.isScrollBody) return;
-
-  // 更新滚动条的位置 (主要用于判断下拉刷新时,滚动条是否在顶部)
-  this.setScrollTop(e.scrollTop);
-
-  // 顶部按钮的显示隐藏
-  if (e.scrollTop >= this.optUp.toTop.offset) {
-    this.showTopBtn();
-  } else {
-    this.hideTopBtn();
-  }
-};
-
-/*列表滚动事件*/
-MeScroll.prototype.scroll = function (e, onScroll) {
-  // 更新滚动条的位置
-  this.setScrollTop(e.scrollTop);
-  // 更新滚动内容高度
-  this.setScrollHeight(e.scrollHeight);
-
-  // 向上滑还是向下滑动
-  if (this.preScrollY == null) this.preScrollY = 0;
-  this.isScrollUp = e.scrollTop - this.preScrollY > 0;
-  this.preScrollY = e.scrollTop;
-
-  // 上滑 && 检查并触发上拉
-  this.isScrollUp && this.triggerUpScroll(true);
-
-  // 顶部按钮的显示隐藏
-  if (e.scrollTop >= this.optUp.toTop.offset) {
-    this.showTopBtn();
-  } else {
-    this.hideTopBtn();
-  }
-
-  // 滑动监听
-  this.optUp.onScroll && onScroll && onScroll();
-};
-
-/* 触发上拉加载 */
-MeScroll.prototype.triggerUpScroll = function (isCheck) {
-  if (!this.isUpScrolling && this.optUp.use && this.optUp.callback) {
-    // 是否校验在底部; 默认不校验
-    if (isCheck === true) {
-      var canUp = false;
-      // 还有下一页 && 没有锁定 && 不在下拉中
-      if (this.optUp.hasNext && !this.optUp.isLock && !this.isDownScrolling) {
-        if (this.getScrollBottom() <= this.optUp.offset) {// 到底部
-          canUp = true; // 标记可上拉
-        }
-      }
-      if (canUp === false) return;
-    }
-    this.showUpScroll(); // 上拉加载中...
-    this.optUp.page.num++; // 预先加一页,如果失败则减回
-    this.isUpAutoLoad = true; // 标记上拉已经自动执行过,避免初始化时多次触发上拉回调
-    this.num = this.optUp.page.num; // 把最新的页数赋值在mescroll上,避免对page的影响
-    this.size = this.optUp.page.size; // 把最新的页码赋值在mescroll上,避免对page的影响
-    this.time = this.optUp.page.time; // 把最新的页码赋值在mescroll上,避免对page的影响
-    this.optUp.callback(this); // 执行回调,联网加载数据
-  }
-};
-
-/* 显示上拉加载中 */
-MeScroll.prototype.showUpScroll = function () {
-  this.isUpScrolling = true; // 标记上拉加载中
-  this.optUp.showLoading && this.optUp.showLoading(this); // 回调
-};
-
-/* 显示上拉无更多数据 */
-MeScroll.prototype.showNoMore = function () {
-  this.optUp.hasNext = false; // 标记无更多数据
-  this.optUp.showNoMore && this.optUp.showNoMore(this); // 回调
-};
-
-/* 隐藏上拉区域**/
-MeScroll.prototype.hideUpScroll = function () {
-  this.optUp.hideUpScroll && this.optUp.hideUpScroll(this); // 回调
-};
-
-/* 结束上拉加载 */
-MeScroll.prototype.endUpScroll = function (isShowNoMore) {
-  if (isShowNoMore != null) {// isShowNoMore=null,不处理下拉状态,下拉刷新的时候调用
-    if (isShowNoMore) {
-      this.showNoMore(); // isShowNoMore=true,显示无更多数据
-    } else {
-      this.hideUpScroll(); // isShowNoMore=false,隐藏上拉加载
-    }
-  }
-  this.isUpScrolling = false; // 标记结束上拉加载
-};
-
-/* 重置上拉加载列表为第一页
-    *isShowLoading 是否显示进度布局;
-    * 1.默认null,不传参,则显示上拉加载的进度布局
-    * 2.传参true, 则显示下拉刷新的进度布局
-    * 3.传参false,则不显示上拉和下拉的进度 (常用于静默更新列表数据)
-    */
-MeScroll.prototype.resetUpScroll = function (isShowLoading) {
-  if (this.optUp && this.optUp.use) {
-    var page = this.optUp.page;
-    this.prePageNum = page.num; // 缓存重置前的页码,加载失败可退回
-    this.prePageTime = page.time; // 缓存重置前的时间,加载失败可退回
-    page.num = this.startNum; // 重置为第一页
-    page.time = null; // 重置时间为空
-    if (!this.isDownScrolling && isShowLoading !== false) {// 如果不是下拉刷新触发的resetUpScroll并且不配置列表静默更新,则显示进度;
-      if (isShowLoading == null) {
-        this.removeEmpty(); // 移除空布局
-        this.showUpScroll(); // 不传参,默认显示上拉加载的进度布局
-      } else {
-        this.showDownScroll(); // 传true,显示下拉刷新的进度布局,不清空列表
-      }
-    }
-    this.isUpAutoLoad = true; // 标记上拉已经自动执行过,避免初始化时多次触发上拉回调
-    this.num = page.num; // 把最新的页数赋值在mescroll上,避免对page的影响
-    this.size = page.size; // 把最新的页码赋值在mescroll上,避免对page的影响
-    this.time = page.time; // 把最新的页码赋值在mescroll上,避免对page的影响
-    this.optUp.callback && this.optUp.callback(this); // 执行上拉回调
-  }
-};
-
-/* 设置page.num的值 */
-MeScroll.prototype.setPageNum = function (num) {
-  this.optUp.page.num = num - 1;
-};
-
-/* 设置page.size的值 */
-MeScroll.prototype.setPageSize = function (size) {
-  this.optUp.page.size = size;
-};
-
-/* 联网回调成功,结束下拉刷新和上拉加载
-    * dataSize: 当前页的数据量(必传)
-    * totalPage: 总页数(必传)
-    * systime: 服务器时间 (可空)
-    */
-MeScroll.prototype.endByPage = function (dataSize, totalPage, systime) {
-  var hasNext;
-  if (this.optUp.use && totalPage != null) hasNext = this.optUp.page.num < totalPage; // 是否还有下一页
-  this.endSuccess(dataSize, hasNext, systime);
-};
-
-/* 联网回调成功,结束下拉刷新和上拉加载
-    * dataSize: 当前页的数据量(必传)
-    * totalSize: 列表所有数据总数量(必传)
-    * systime: 服务器时间 (可空)
-    */
-MeScroll.prototype.endBySize = function (dataSize, totalSize, systime) {
-  var hasNext;
-  if (this.optUp.use && totalSize != null) {
-    var loadSize = (this.optUp.page.num - 1) * this.optUp.page.size + dataSize; // 已加载的数据总数
-    hasNext = loadSize < totalSize; // 是否还有下一页
-  }
-  this.endSuccess(dataSize, hasNext, systime);
-};
-
-/* 联网回调成功,结束下拉刷新和上拉加载
-    * dataSize: 当前页的数据个数(不是所有页的数据总和),用于上拉加载判断是否还有下一页.如果不传,则会判断还有下一页
-    * hasNext: 是否还有下一页,布尔类型;用来解决这个小问题:比如列表共有20条数据,每页加载10条,共2页.如果只根据dataSize判断,则需翻到第三页才会知道无更多数据,如果传了hasNext,则翻到第二页即可显示无更多数据.
-    * systime: 服务器时间(可空);用来解决这个小问题:当准备翻下一页时,数据库新增了几条记录,此时翻下一页,前面的几条数据会和上一页的重复;这里传入了systime,那么upCallback的page.time就会有值,把page.time传给服务器,让后台过滤新加入的那几条记录
-    */
-MeScroll.prototype.endSuccess = function (dataSize, hasNext, systime) {
-  var me = this;
-  // 结束下拉刷新
-  if (me.isDownScrolling) {
-    me.isDownEndSuccess = true;
-    me.endDownScroll();
-  }
-
-  // 结束上拉加载
-  if (me.optUp.use) {
-    var isShowNoMore; // 是否已无更多数据
-    if (dataSize != null) {
-      var pageNum = me.optUp.page.num; // 当前页码
-      var pageSize = me.optUp.page.size; // 每页长度
-      // 如果是第一页
-      if (pageNum === 1) {
-        if (systime) me.optUp.page.time = systime; // 设置加载列表数据第一页的时间
-      }
-      if (dataSize < pageSize || hasNext === false) {
-        // 返回的数据不满一页时,则说明已无更多数据
-        me.optUp.hasNext = false;
-        if (dataSize === 0 && pageNum === 1) {
-          // 如果第一页无任何数据且配置了空布局
-          isShowNoMore = false;
-          me.showEmpty();
-        } else {
-          // 总列表数少于配置的数量,则不显示无更多数据
-          var allDataSize = (pageNum - 1) * pageSize + dataSize;
-          if (allDataSize < me.optUp.noMoreSize) {
-            isShowNoMore = false;
-          } else {
-            isShowNoMore = true;
-          }
-          me.removeEmpty(); // 移除空布局
-        }
-      } else {
-        // 还有下一页
-        isShowNoMore = false;
-        me.optUp.hasNext = true;
-        me.removeEmpty(); // 移除空布局
-      }
-    }
-
-    // 隐藏上拉
-    me.endUpScroll(isShowNoMore);
-  }
-};
-
-/* 回调失败,结束下拉刷新和上拉加载 */
-MeScroll.prototype.endErr = function (errDistance) {
-  // 结束下拉,回调失败重置回原来的页码和时间
-  if (this.isDownScrolling) {
-    this.isDownEndSuccess = false;
-    var page = this.optUp.page;
-    if (page && this.prePageNum) {
-      page.num = this.prePageNum;
-      page.time = this.prePageTime;
-    }
-    this.endDownScroll();
-  }
-  // 结束上拉,回调失败重置回原来的页码
-  if (this.isUpScrolling) {
-    this.optUp.page.num--;
-    this.endUpScroll(false);
-    // 如果是mescroll-body,则需往回滚一定距离
-    if (this.isScrollBody && errDistance !== 0) {// 不处理0
-      if (!errDistance) errDistance = this.optUp.errDistance; // 不传,则取默认
-      this.scrollTo(this.getScrollTop() - errDistance, 0); // 往上回滚的距离
-    }
-  }
-};
-
-/* 显示空布局 */
-MeScroll.prototype.showEmpty = function () {
-  this.optUp.empty.use && this.optUp.empty.onShow && this.optUp.empty.onShow(true);
-};
-
-/* 移除空布局 */
-MeScroll.prototype.removeEmpty = function () {
-  this.optUp.empty.use && this.optUp.empty.onShow && this.optUp.empty.onShow(false);
-};
-
-/* 显示回到顶部的按钮 */
-MeScroll.prototype.showTopBtn = function () {
-  if (!this.topBtnShow) {
-    this.topBtnShow = true;
-    this.optUp.toTop.onShow && this.optUp.toTop.onShow(true);
-  }
-};
-
-/* 隐藏回到顶部的按钮 */
-MeScroll.prototype.hideTopBtn = function () {
-  if (this.topBtnShow) {
-    this.topBtnShow = false;
-    this.optUp.toTop.onShow && this.optUp.toTop.onShow(false);
-  }
-};
-
-/* 获取滚动条的位置 */
-MeScroll.prototype.getScrollTop = function () {
-  return this.scrollTop || 0;
-};
-
-/* 记录滚动条的位置 */
-MeScroll.prototype.setScrollTop = function (y) {
-  this.scrollTop = y;
-};
-
-/* 滚动到指定位置 */
-MeScroll.prototype.scrollTo = function (y, t) {
-  this.myScrollTo && this.myScrollTo(y, t); // scrollview需自定义回到顶部方法
-};
-
-/* 自定义scrollTo */
-MeScroll.prototype.resetScrollTo = function (myScrollTo) {
-  this.myScrollTo = myScrollTo;
-};
-
-/* 滚动条到底部的距离 */
-MeScroll.prototype.getScrollBottom = function () {
-  return this.getScrollHeight() - this.getClientHeight() - this.getScrollTop();
-};
-
-/* 计步器
-    star: 开始值
-    end: 结束值
-    callback(step,timer): 回调step值,计步器timer,可自行通过window.clearInterval(timer)结束计步器;
-    t: 计步时长,传0则直接回调end值;不传则默认300ms
-    rate: 周期;不传则默认30ms计步一次
-    * */
-MeScroll.prototype.getStep = function (star, end, callback, t, rate) {
-  var diff = end - star; // 差值
-  if (t === 0 || diff === 0) {
-    callback && callback(end);
-    return;
-  }
-  t = t || 300; // 时长 300ms
-  rate = rate || 30; // 周期 30ms
-  var count = t / rate; // 次数
-  var step = diff / count; // 步长
-  var i = 0; // 计数
-  var timer = setInterval(function () {
-    if (i < count - 1) {
-      star += step;
-      callback && callback(star, timer);
-      i++;
-    } else {
-      callback && callback(end, timer); // 最后一次直接设置end,避免计算误差
-      clearInterval(timer);
-    }
-  }, rate);
-};
-
-/* 滚动容器的高度 */
-MeScroll.prototype.getClientHeight = function (isReal) {
-  var h = this.clientHeight || 0;
-  if (h === 0 && isReal !== true) {// 未获取到容器的高度,可临时取body的高度 (可能会有误差)
-    h = this.getBodyHeight();
-  }
-  return h;
-};
-MeScroll.prototype.setClientHeight = function (h) {
-  this.clientHeight = h;
-};
-
-/* 滚动内容的高度 */
-MeScroll.prototype.getScrollHeight = function () {
-  return this.scrollHeight || 0;
-};
-MeScroll.prototype.setScrollHeight = function (h) {
-  this.scrollHeight = h;
-};
-
-/* body的高度 */
-MeScroll.prototype.getBodyHeight = function () {
-  return this.bodyHeight || 0;
-};
-MeScroll.prototype.setBodyHeight = function (h) {
-  this.bodyHeight = h;
-};
-
-/* 阻止浏览器默认滚动事件 */
-MeScroll.prototype.preventDefault = function (e) {
-  // 小程序不支持e.preventDefault, 已在wxs中禁止
-  // app的bounce只能通过配置pages.json的style.app-plus.bounce为"none"来禁止, 或使用renderjs禁止
-  // cancelable:是否可以被禁用; defaultPrevented:是否已经被禁用
-  if (e && e.cancelable && !e.defaultPrevented) e.preventDefault();
-};
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
-
-/***/ }),
-
-/***/ 202:
-/*!************************************************************************************************!*\
-  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-uni-option.js ***!
-  \************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 全局配置
-// mescroll-body 和 mescroll-uni 通用
-var GlobalOption = {
-  down: {
-    // 其他down的配置参数也可以写,这里只展示了常用的配置:
-    offset: 80, // 在列表顶部,下拉大于80px,松手即可触发下拉刷新的回调
-    native: false // 是否使用系统自带的下拉刷新; 默认false; 仅在mescroll-body生效 (值为true时,还需在pages配置enablePullDownRefresh:true;详请参考mescroll-native的案例)
-  },
-  up: {
-    // 其他up的配置参数也可以写,这里只展示了常用的配置:
-    offset: 150, // 距底部多远时,触发upCallback,仅mescroll-uni生效 ( mescroll-body配置的是pages.json的 onReachBottomDistance )
-    toTop: {
-      // 回到顶部按钮,需配置src才显示
-      src: "https://www.mescroll.com/img/mescroll-totop.png", // 图片路径 (建议放入static目录, 如 /static/img/mescroll-totop.png )
-      offset: 1000, // 列表滚动多少距离才显示回到顶部按钮,默认1000px
-      right: 20, // 到右边的距离, 默认20 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
-      bottom: 120, // 到底部的距离, 默认120 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
-      width: 72 // 回到顶部图标的宽度, 默认72 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
-    },
-    empty: {
-      use: true, // 是否显示空布局
-      icon: "https://www.mescroll.com/img/mescroll-empty.png" // 图标路径 (建议放入static目录, 如 /static/img/mescroll-empty.png )
-    } },
-
-  // 国际化配置
-  i18n: {
-    // 中文
-    zh: {
-      down: {
-        textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
-        textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
-        textLoading: '加载中 ...', // 加载中的提示文本
-        textSuccess: '加载成功', // 加载成功的文本
-        textErr: '加载失败' // 加载失败的文本
-      },
-      up: {
-        textLoading: '加载中 ...', // 加载中的提示文本
-        textNoMore: '-- END --', // 没有更多数据的提示文本
-        empty: {
-          tip: '~ 空空如也 ~' // 空提示
-        } } },
-
-
-    // 英文
-    en: {
-      down: {
-        textInOffset: 'drop down refresh',
-        textOutOffset: 'release updates',
-        textLoading: 'loading ...',
-        textSuccess: 'loaded successfully',
-        textErr: 'loading failed' },
-
-      up: {
-        textLoading: 'loading ...',
-        textNoMore: '-- END --',
-        empty: {
-          tip: '~ absolutely empty ~' } } } } };var _default =
-
-
-
-
-
-
-GlobalOption;exports.default = _default;
-
-/***/ }),
-
-/***/ 203:
-/*!******************************************************************************************!*\
-  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-i18n.js ***!
-  \******************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 国际化工具类
-var mescrollI18n = {
-  // 默认语言
-  def: "zh",
-  // 获取当前语言类型
-  getType: function getType() {
-    return uni.getStorageSync("mescroll-i18n") || this.def;
-  },
-  // 设置当前语言类型
-  setType: function setType(type) {
-    uni.setStorageSync("mescroll-i18n", type);
-  } };var _default =
-
-
-mescrollI18n;exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
-
-/***/ }),
-
-/***/ 204:
-/*!***************************************************************************************!*\
-  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/wxs/mixins.js ***!
-  \***************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 定义在wxs (含renderjs) 逻辑层的数据和方法, 与视图层相互通信
-var WxsMixin = {
-  data: function data() {
-    return {
-      // 传入wxs视图层的数据 (响应式)
-      wxsProp: {
-        optDown: {}, // 下拉刷新的配置
-        scrollTop: 0, // 滚动条的距离
-        bodyHeight: 0, // body的高度
-        isDownScrolling: false, // 是否正在下拉刷新中
-        isUpScrolling: false, // 是否正在上拉加载中
-        isScrollBody: true, // 是否为mescroll-body滚动
-        isUpBoth: true, // 上拉加载时,是否同时可以下拉刷新
-        t: 0 // 数据更新的标记 (只有数据更新了,才会触发wxs的Observer)
-      },
-
-      // 标记调用wxs视图层的方法
-      callProp: {
-        callType: '', // 方法名
-        t: 0 // 数据更新的标记 (只有数据更新了,才会触发wxs的Observer)
-      },
-
-      // 不用wxs的平台使用此处的wxsBiz对象,抹平wxs的写法 (微信小程序和APP使用的wxsBiz对象是./wxs/wxs.wxs)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      // 不用renderjs的平台使用此处的renderBiz对象,抹平renderjs的写法 (app 和 h5 使用的renderBiz对象是./wxs/renderjs.js)
-
-      renderBiz: {
-        propObserver: function propObserver() {} // 抹平renderjs的写法
-      } };
-
-
-  },
-  methods: {
-    // wxs视图层调用逻辑层的回调
-    wxsCall: function wxsCall(msg) {
-      if (msg.type === 'setWxsProp') {
-        // 更新wxsProp数据 (值改变才触发更新)
-        this.wxsProp = {
-          optDown: this.mescroll.optDown,
-          scrollTop: this.mescroll.getScrollTop(),
-          bodyHeight: this.mescroll.getBodyHeight(),
-          isDownScrolling: this.mescroll.isDownScrolling,
-          isUpScrolling: this.mescroll.isUpScrolling,
-          isUpBoth: this.mescroll.optUp.isBoth,
-          isScrollBody: this.mescroll.isScrollBody,
-          t: Date.now() };
-
-      } else if (msg.type === 'setLoadType') {
-        // 设置inOffset,outOffset的状态
-        this.downLoadType = msg.downLoadType;
-        // 状态挂载到mescroll对象, 以便在其他组件中使用, 比如<me-video>中
-        this.$set(this.mescroll, 'downLoadType', this.downLoadType);
-        // 重置是否加载成功的状态
-        this.$set(this.mescroll, 'isDownEndSuccess', null);
-      } else if (msg.type === 'triggerDownScroll') {
-        // 主动触发下拉刷新
-        this.mescroll.triggerDownScroll();
-      } else if (msg.type === 'endDownScroll') {
-        // 结束下拉刷新
-        this.mescroll.endDownScroll();
-      } else if (msg.type === 'triggerUpScroll') {
-        // 主动触发上拉加载
-        this.mescroll.triggerUpScroll(true);
-      }
-    } },
-
-  mounted: function mounted() {var _this = this;
-
-    // 配置主动触发wxs显示加载进度的回调
-    this.mescroll.optDown.afterLoading = function () {
-      _this.callProp = { callType: "showLoading", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
-    };
-    // 配置主动触发wxs隐藏加载进度的回调
-    this.mescroll.optDown.afterEndDownScroll = function () {
-      _this.callProp = { callType: "endDownScroll", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
-      var delay = 300 + (_this.mescroll.optDown.beforeEndDelay || 0);
-      setTimeout(function () {
-        if (_this.downLoadType === 4 || _this.downLoadType === 0) {
-          _this.callProp = { callType: "clearTransform", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
-        }
-        // 状态挂载到mescroll对象, 以便在其他组件中使用, 比如<me-video>中
-        _this.$set(_this.mescroll, 'downLoadType', _this.downLoadType);
-      }, delay);
-    };
-    // 初始化wxs的数据
-    this.wxsCall({ type: 'setWxsProp' });
-
-  } };var _default =
-
-
-WxsMixin;exports.default = _default;
 
 /***/ }),
 
@@ -5790,6 +4864,1111 @@ var index_cjs = {
 module.exports = index_cjs;
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack/buildin/global.js */ 2)))
+
+/***/ }),
+
+/***/ 251:
+/*!***********************************************!*\
+  !*** E:/code/myCampus/public/config/emoji.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.pngUrl = exports.gifList = exports.pngList = void 0;function _createForOfIteratorHelper(o, allowArrayLike) {var it;if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {if (it) o = it;var i = 0;var F = function F() {};return { s: F, n: function n() {if (i >= o.length) return { done: true };return { done: false, value: o[i++] };}, e: function e(_e) {throw _e;}, f: F };}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}var normalCompletion = true,didErr = false,err;return { s: function s() {it = o[Symbol.iterator]();}, n: function n() {var step = it.next();normalCompletion = step.done;return step;}, e: function e(_e2) {didErr = true;err = _e2;}, f: function f() {try {if (!normalCompletion && it.return != null) it.return();} finally {if (didErr) throw err;}} };}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}var url = 'https://www.xiaopang.cool/public/imgs/';
+var pngList = [//糗事表情png
+[0, 1, 2, 3, 4, 5, 6],
+[7, 8, 9, 10, 11, 12, 13],
+[14, 15, 16, 17, 18, 19, 20],
+[21, 22, 23, 24, 25, 26, 27],
+[28, 29, 30, 31, 32, 33, 34],
+[35, 36, 37, 38, 39, 40, 41],
+[42, 43, 44, 45, 46, 47, 48],
+[49, 50, 51, 52, 53, 54, 55],
+[56, 57, 58, 59, 60, 61, 62]];exports.pngList = pngList;
+
+var gifList = [//全部表情jif
+[100, 101, 102, 103, 104, 105, 106],
+[107, 108, 109, 110, 111, 112, 113],
+[114, 115, 116, 117, 118, 119, 120],
+[121, 122, 123, 124, 125, 126, 127],
+[128, 129, 130, 131, 132, 133, 134],
+[135, 136, 137, 138, 139, 140, 141],
+[142, 143, 144, 145, 146, 147, 148],
+[149, 150, 151, 152, 153, 154, 178],
+[179, 180, 181, 182, 183, 184, 185],
+[186, 187, 188, 189, 242, 243, 244],
+[245, 246, 247, 248, 249, 250, 251],
+[252, 253, 270, 271, 272, 273, 274],
+[275, 276, 277, 278, 279, 280, 281],
+[282, 283, 284, 285, 286, 287, 288],
+[289, 290, 291, 292, 293, 294, 295],
+[296, 297, 298, 299, 300, 301, 302],
+[303, 304, 305, 306, 307, 308, 309],
+[310, 311, 312, 313, 314]];
+
+// 图片的服务器地址
+exports.gifList = gifList;var pngUrl = function pngUrl() {
+  var arr = [];
+  var child = [];
+  var list = pngList;var _iterator = _createForOfIteratorHelper(
+  list),_step;try {for (_iterator.s(); !(_step = _iterator.n()).done;) {var item = _step.value;
+      child = [];var _iterator2 = _createForOfIteratorHelper(
+      item),_step2;try {for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {var key = _step2.value;
+          child.push(url + key + '.png');
+        }} catch (err) {_iterator2.e(err);} finally {_iterator2.f();}
+      arr.push(child);
+    }} catch (err) {_iterator.e(err);} finally {_iterator.f();}
+  return arr;
+};
+// gif 图片不清晰舍弃
+exports.pngUrl = pngUrl;var gifUrl = function gifUrl() {
+  var arr = [];
+  var child = [];
+  var list = gifList;var _iterator3 = _createForOfIteratorHelper(
+
+  list),_step3;try {for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {var item = _step3.value;
+      child = [];var _iterator4 = _createForOfIteratorHelper(
+      item),_step4;try {for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {var key = _step4.value;
+          child.push(url + key + '.gif');
+        }} catch (err) {_iterator4.e(err);} finally {_iterator4.f();}
+      arr.push(child);
+    }} catch (err) {_iterator3.e(err);} finally {_iterator3.f();}
+  return arr;
+};
+
+/***/ }),
+
+/***/ 266:
+/*!*****************************************************************************************!*\
+  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-uni.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = MeScroll; /* mescroll
+                                                                                                        * version 1.3.7
+                                                                                                        * 2021-04-12 wenju
+                                                                                                        * https://www.mescroll.com
+                                                                                                        */
+
+function MeScroll(options, isScrollBody) {
+  var me = this;
+  me.version = '1.3.7'; // mescroll版本号
+  me.options = options || {}; // 配置
+  me.isScrollBody = isScrollBody || false; // 滚动区域是否为原生页面滚动; 默认为scroll-view
+
+  me.isDownScrolling = false; // 是否在执行下拉刷新的回调
+  me.isUpScrolling = false; // 是否在执行上拉加载的回调
+  var hasDownCallback = me.options.down && me.options.down.callback; // 是否配置了down的callback
+
+  // 初始化下拉刷新
+  me.initDownScroll();
+  // 初始化上拉加载,则初始化
+  me.initUpScroll();
+
+  // 自动加载
+  setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
+    // 自动触发下拉刷新 (只有配置了down的callback才自动触发下拉刷新)
+    if ((me.optDown.use || me.optDown.native) && me.optDown.auto && hasDownCallback) {
+      if (me.optDown.autoShowLoading) {
+        me.triggerDownScroll(); // 显示下拉进度,执行下拉回调
+      } else {
+        me.optDown.callback && me.optDown.callback(me); // 不显示下拉进度,直接执行下拉回调
+      }
+    }
+    // 自动触发上拉加载
+    if (!me.isUpAutoLoad) {// 部分小程序(头条小程序)emit是异步, 会导致isUpAutoLoad判断有误, 先延时确保先执行down的callback,再执行up的callback
+      setTimeout(function () {
+        me.optUp.use && me.optUp.auto && !me.isUpAutoLoad && me.triggerUpScroll();
+      }, 100);
+    }
+  }, 30); // 需让me.optDown.inited和me.optUp.inited先执行
+}
+
+/* 配置参数:下拉刷新 */
+MeScroll.prototype.extendDownScroll = function (optDown) {
+  // 下拉刷新的配置
+  MeScroll.extend(optDown, {
+    use: true, // 是否启用下拉刷新; 默认true
+    auto: true, // 是否在初始化完毕之后自动执行下拉刷新的回调; 默认true
+    native: false, // 是否使用系统自带的下拉刷新; 默认false; 仅mescroll-body生效 (值为true时,还需在pages配置enablePullDownRefresh:true;详请参考mescroll-native的案例)
+    autoShowLoading: false, // 如果设置auto=true(在初始化完毕之后自动执行下拉刷新的回调),那么是否显示下拉刷新的进度; 默认false
+    isLock: false, // 是否锁定下拉刷新,默认false;
+    offset: 80, // 在列表顶部,下拉大于80px,松手即可触发下拉刷新的回调
+    startTop: 100, // scroll-view快速滚动到顶部时,此时的scroll-top可能大于0, 此值用于控制最大的误差
+    inOffsetRate: 1, // 在列表顶部,下拉的距离小于offset时,改变下拉区域高度比例;值小于1且越接近0,高度变化越小,表现为越往下越难拉
+    outOffsetRate: 0.2, // 在列表顶部,下拉的距离大于offset时,改变下拉区域高度比例;值小于1且越接近0,高度变化越小,表现为越往下越难拉
+    bottomOffset: 20, // 当手指touchmove位置在距离body底部20px范围内的时候结束上拉刷新,避免Webview嵌套导致touchend事件不执行
+    minAngle: 45, // 向下滑动最少偏移的角度,取值区间  [0,90];默认45度,即向下滑动的角度大于45度则触发下拉;而小于45度,将不触发下拉,避免与左右滑动的轮播等组件冲突;
+    textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
+    textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
+    textLoading: '加载中 ...', // 加载中的提示文本
+    textSuccess: '加载成功', // 加载成功的文本
+    textErr: '加载失败', // 加载失败的文本
+    beforeEndDelay: 0, // 延时结束的时长 (显示加载成功/失败的时长, android小程序设置此项结束下拉会卡顿, 配置后请注意测试)
+    bgColor: "transparent", // 背景颜色 (建议在pages.json中再设置一下backgroundColorTop)
+    textColor: "gray", // 文本颜色 (当bgColor配置了颜色,而textColor未配置时,则textColor会默认为白色)
+    inited: null, // 下拉刷新初始化完毕的回调
+    inOffset: null, // 下拉的距离进入offset范围内那一刻的回调
+    outOffset: null, // 下拉的距离大于offset那一刻的回调
+    onMoving: null, // 下拉过程中的回调,滑动过程一直在执行; rate下拉区域当前高度与指定距离的比值(inOffset: rate<1; outOffset: rate>=1); downHight当前下拉区域的高度
+    beforeLoading: null, // 准备触发下拉刷新的回调: 如果return true,将不触发showLoading和callback回调; 常用来完全自定义下拉刷新, 参考案例【淘宝 v6.8.0】
+    showLoading: null, // 显示下拉刷新进度的回调
+    afterLoading: null, // 显示下拉刷新进度的回调之后,马上要执行的代码 (如: 在wxs中使用)
+    beforeEndDownScroll: null, // 准备结束下拉的回调. 返回结束下拉的延时执行时间,默认0ms; 常用于结束下拉之前再显示另外一小段动画,才去隐藏下拉刷新的场景, 参考案例【dotJump】
+    endDownScroll: null, // 结束下拉刷新的回调
+    afterEndDownScroll: null, // 结束下拉刷新的回调,马上要执行的代码 (如: 在wxs中使用)
+    callback: function callback(mescroll) {
+      // 下拉刷新的回调;默认重置上拉加载列表为第一页
+      mescroll.resetUpScroll();
+    } });
+
+};
+
+/* 配置参数:上拉加载 */
+MeScroll.prototype.extendUpScroll = function (optUp) {
+  // 上拉加载的配置
+  MeScroll.extend(optUp, {
+    use: true, // 是否启用上拉加载; 默认true
+    auto: true, // 是否在初始化完毕之后自动执行上拉加载的回调; 默认true
+    isLock: false, // 是否锁定上拉加载,默认false;
+    isBoth: true, // 上拉加载时,如果滑动到列表顶部是否可以同时触发下拉刷新;默认true,两者可同时触发;
+    callback: null, // 上拉加载的回调;function(page,mescroll){ }
+    page: {
+      num: 0, // 当前页码,默认0,回调之前会加1,即callback(page)会从1开始
+      size: 10, // 每页数据的数量
+      time: null // 加载第一页数据服务器返回的时间; 防止用户翻页时,后台新增了数据从而导致下一页数据重复;
+    },
+    noMoreSize: 5, // 如果列表已无数据,可设置列表的总数量要大于等于5条才显示无更多数据;避免列表数据过少(比如只有一条数据),显示无更多数据会不好看
+    offset: 150, // 距底部多远时,触发upCallback,仅mescroll-uni生效 ( mescroll-body配置的是pages.json的 onReachBottomDistance )
+    textLoading: '加载中 ...', // 加载中的提示文本
+    textNoMore: '-- END --', // 没有更多数据的提示文本
+    bgColor: "transparent", // 背景颜色 (建议在pages.json中再设置一下backgroundColorBottom)
+    textColor: "gray", // 文本颜色 (当bgColor配置了颜色,而textColor未配置时,则textColor会默认为白色)
+    inited: null, // 初始化完毕的回调
+    showLoading: null, // 显示加载中的回调
+    showNoMore: null, // 显示无更多数据的回调
+    hideUpScroll: null, // 隐藏上拉加载的回调
+    errDistance: 60, // endErr的时候需往上滑动一段距离,使其往下滑动时再次触发onReachBottom,仅mescroll-body生效
+    toTop: {
+      // 回到顶部按钮,需配置src才显示
+      src: null, // 图片路径,默认null (绝对路径或网络图)
+      offset: 1000, // 列表滚动多少距离才显示回到顶部按钮,默认1000
+      duration: 300, // 回到顶部的动画时长,默认300ms (当值为0或300则使用系统自带回到顶部,更流畅; 其他值则通过step模拟,部分机型可能不够流畅,所以非特殊情况不建议修改此项)
+      btnClick: null, // 点击按钮的回调
+      onShow: null, // 是否显示的回调
+      zIndex: 9990, // fixed定位z-index值
+      left: null, // 到左边的距离, 默认null. 此项有值时,right不生效. (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
+      right: 20, // 到右边的距离, 默认20 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
+      bottom: 120, // 到底部的距离, 默认120 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
+      safearea: false, // bottom的偏移量是否加上底部安全区的距离, 默认false, 需要适配iPhoneX时使用 (具体的界面如果不配置此项,则取本vue的safearea值)
+      width: 72, // 回到顶部图标的宽度, 默认72 (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
+      radius: "50%" // 圆角, 默认"50%" (支持20, "20rpx", "20px", "20%"格式的值, 其中纯数字则默认单位rpx)
+    },
+    empty: {
+      use: true, // 是否显示空布局
+      icon: null, // 图标路径
+      tip: '~ 暂无相关数据 ~', // 提示
+      btnText: '', // 按钮
+      btnClick: null, // 点击按钮的回调
+      onShow: null, // 是否显示的回调
+      fixed: false, // 是否使用fixed定位,默认false; 配置fixed为true,以下的top和zIndex才生效 (transform会使fixed失效,最终会降级为absolute)
+      top: "100rpx", // fixed定位的top值 (完整的单位值,如 "10%"; "100rpx")
+      zIndex: 99 // fixed定位z-index值
+    },
+    onScroll: false // 是否监听滚动事件
+  });
+};
+
+/* 配置参数 */
+MeScroll.extend = function (userOption, defaultOption) {
+  if (!userOption) return defaultOption;
+  for (var key in defaultOption) {
+    if (userOption[key] == null) {
+      var def = defaultOption[key];
+      if (def != null && typeof def === 'object') {
+        userOption[key] = MeScroll.extend({}, def); // 深度匹配
+      } else {
+        userOption[key] = def;
+      }
+    } else if (typeof userOption[key] === 'object') {
+      MeScroll.extend(userOption[key], defaultOption[key]); // 深度匹配
+    }
+  }
+  return userOption;
+};
+
+/* 简单判断是否配置了颜色 (非透明,非白色) */
+MeScroll.prototype.hasColor = function (color) {
+  if (!color) return false;
+  var c = color.toLowerCase();
+  return c != "#fff" && c != "#ffffff" && c != "transparent" && c != "white";
+};
+
+/* -------初始化下拉刷新------- */
+MeScroll.prototype.initDownScroll = function () {
+  var me = this;
+  // 配置参数
+  me.optDown = me.options.down || {};
+  if (!me.optDown.textColor && me.hasColor(me.optDown.bgColor)) me.optDown.textColor = "#fff"; // 当bgColor有值且textColor未设置,则textColor默认白色
+  me.extendDownScroll(me.optDown);
+
+  // 如果是mescroll-body且配置了native,则禁止自定义的下拉刷新
+  if (me.isScrollBody && me.optDown.native) {
+    me.optDown.use = false;
+  } else {
+    me.optDown.native = false; // 仅mescroll-body支持,mescroll-uni不支持
+  }
+
+  me.downHight = 0; // 下拉区域的高度
+
+  // 在页面中加入下拉布局
+  if (me.optDown.use && me.optDown.inited) {
+    // 初始化完毕的回调
+    setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
+      me.optDown.inited(me);
+    }, 0);
+  }
+};
+
+/* 列表touchstart事件 */
+MeScroll.prototype.touchstartEvent = function (e) {
+  if (!this.optDown.use) return;
+
+  this.startPoint = this.getPoint(e); // 记录起点
+  this.startTop = this.getScrollTop(); // 记录此时的滚动条位置
+  this.startAngle = 0; // 初始角度
+  this.lastPoint = this.startPoint; // 重置上次move的点
+  this.maxTouchmoveY = this.getBodyHeight() - this.optDown.bottomOffset; // 手指触摸的最大范围(写在touchstart避免body获取高度为0的情况)
+  this.inTouchend = false; // 标记不是touchend
+};
+
+/* 列表touchmove事件 */
+MeScroll.prototype.touchmoveEvent = function (e) {
+  if (!this.optDown.use) return;
+  var me = this;
+
+  var scrollTop = me.getScrollTop(); // 当前滚动条的距离
+  var curPoint = me.getPoint(e); // 当前点
+
+  var moveY = curPoint.y - me.startPoint.y; // 和起点比,移动的距离,大于0向下拉,小于0向上拉
+
+  // 向下拉 && 在顶部
+  // mescroll-body,直接判定在顶部即可
+  // scroll-view在滚动时不会触发touchmove,当触顶/底/左/右时,才会触发touchmove
+  // scroll-view滚动到顶部时,scrollTop不一定为0,也有可能大于0; 在iOS的APP中scrollTop可能为负数,不一定和startTop相等
+  if (moveY > 0 && (
+  me.isScrollBody && scrollTop <= 0 ||
+
+  !me.isScrollBody && (scrollTop <= 0 || scrollTop <= me.optDown.startTop && scrollTop === me.startTop)))
+  {
+    // 可下拉的条件
+    if (!me.inTouchend && !me.isDownScrolling && !me.optDown.isLock && (!me.isUpScrolling || me.isUpScrolling &&
+    me.optUp.isBoth)) {
+
+      // 下拉的初始角度是否在配置的范围内
+      if (!me.startAngle) me.startAngle = me.getAngle(me.lastPoint, curPoint); // 两点之间的角度,区间 [0,90]
+      if (me.startAngle < me.optDown.minAngle) return; // 如果小于配置的角度,则不往下执行下拉刷新
+
+      // 如果手指的位置超过配置的距离,则提前结束下拉,避免Webview嵌套导致touchend无法触发
+      if (me.maxTouchmoveY > 0 && curPoint.y >= me.maxTouchmoveY) {
+        me.inTouchend = true; // 标记执行touchend
+        me.touchendEvent(); // 提前触发touchend
+        return;
+      }
+
+      me.preventDefault(e); // 阻止默认事件
+
+      var diff = curPoint.y - me.lastPoint.y; // 和上次比,移动的距离 (大于0向下,小于0向上)
+
+      // 下拉距离  < 指定距离
+      if (me.downHight < me.optDown.offset) {
+        if (me.movetype !== 1) {
+          me.movetype = 1; // 加入标记,保证只执行一次
+          me.isDownEndSuccess = null; // 重置是否加载成功的状态 (wxs执行的是wxs.wxs)
+          me.optDown.inOffset && me.optDown.inOffset(me); // 进入指定距离范围内那一刻的回调,只执行一次
+          me.isMoveDown = true; // 标记下拉区域高度改变,在touchend重置回来
+        }
+        me.downHight += diff * me.optDown.inOffsetRate; // 越往下,高度变化越小
+
+        // 指定距离  <= 下拉距离
+      } else {
+        if (me.movetype !== 2) {
+          me.movetype = 2; // 加入标记,保证只执行一次
+          me.optDown.outOffset && me.optDown.outOffset(me); // 下拉超过指定距离那一刻的回调,只执行一次
+          me.isMoveDown = true; // 标记下拉区域高度改变,在touchend重置回来
+        }
+        if (diff > 0) {// 向下拉
+          me.downHight += diff * me.optDown.outOffsetRate; // 越往下,高度变化越小
+        } else {// 向上收
+          me.downHight += diff; // 向上收回高度,则向上滑多少收多少高度
+        }
+      }
+
+      me.downHight = Math.round(me.downHight); // 取整
+      var rate = me.downHight / me.optDown.offset; // 下拉区域当前高度与指定距离的比值
+      me.optDown.onMoving && me.optDown.onMoving(me, rate, me.downHight); // 下拉过程中的回调,一直在执行
+    }
+  }
+
+  me.lastPoint = curPoint; // 记录本次移动的点
+};
+
+/* 列表touchend事件 */
+MeScroll.prototype.touchendEvent = function (e) {
+  if (!this.optDown.use) return;
+  // 如果下拉区域高度已改变,则需重置回来
+  if (this.isMoveDown) {
+    if (this.downHight >= this.optDown.offset) {
+      // 符合触发刷新的条件
+      this.triggerDownScroll();
+    } else {
+      // 不符合的话 则重置
+      this.downHight = 0;
+      this.endDownScrollCall(this);
+    }
+    this.movetype = 0;
+    this.isMoveDown = false;
+  } else if (!this.isScrollBody && this.getScrollTop() === this.startTop) {// scroll-view到顶/左/右/底的滑动事件
+    var isScrollUp = this.getPoint(e).y - this.startPoint.y < 0; // 和起点比,移动的距离,大于0向下拉,小于0向上拉
+    // 上滑
+    if (isScrollUp) {
+      // 需检查滑动的角度
+      var angle = this.getAngle(this.getPoint(e), this.startPoint); // 两点之间的角度,区间 [0,90]
+      if (angle > 80) {
+        // 检查并触发上拉
+        this.triggerUpScroll(true);
+      }
+    }
+  }
+};
+
+/* 根据点击滑动事件获取第一个手指的坐标 */
+MeScroll.prototype.getPoint = function (e) {
+  if (!e) {
+    return {
+      x: 0,
+      y: 0 };
+
+  }
+  if (e.touches && e.touches[0]) {
+    return {
+      x: e.touches[0].pageX,
+      y: e.touches[0].pageY };
+
+  } else if (e.changedTouches && e.changedTouches[0]) {
+    return {
+      x: e.changedTouches[0].pageX,
+      y: e.changedTouches[0].pageY };
+
+  } else {
+    return {
+      x: e.clientX,
+      y: e.clientY };
+
+  }
+};
+
+/* 计算两点之间的角度: 区间 [0,90]*/
+MeScroll.prototype.getAngle = function (p1, p2) {
+  var x = Math.abs(p1.x - p2.x);
+  var y = Math.abs(p1.y - p2.y);
+  var z = Math.sqrt(x * x + y * y);
+  var angle = 0;
+  if (z !== 0) {
+    angle = Math.asin(y / z) / Math.PI * 180;
+  }
+  return angle;
+};
+
+/* 触发下拉刷新 */
+MeScroll.prototype.triggerDownScroll = function () {
+  if (this.optDown.beforeLoading && this.optDown.beforeLoading(this)) {
+    //return true则处于完全自定义状态
+  } else {
+    this.showDownScroll(); // 下拉刷新中...
+    !this.optDown.native && this.optDown.callback && this.optDown.callback(this); // 执行回调,联网加载数据
+  }
+};
+
+/* 显示下拉进度布局 */
+MeScroll.prototype.showDownScroll = function () {
+  this.isDownScrolling = true; // 标记下拉中
+  if (this.optDown.native) {
+    uni.startPullDownRefresh(); // 系统自带的下拉刷新
+    this.showDownLoadingCall(0); // 仍触发showLoading,因为上拉加载用到
+  } else {
+    this.downHight = this.optDown.offset; // 更新下拉区域高度
+    this.showDownLoadingCall(this.downHight); // 下拉刷新中...
+  }
+};
+
+MeScroll.prototype.showDownLoadingCall = function (downHight) {
+  this.optDown.showLoading && this.optDown.showLoading(this, downHight); // 下拉刷新中...
+  this.optDown.afterLoading && this.optDown.afterLoading(this, downHight); // 下拉刷新中...触发之后马上要执行的代码
+};
+
+/* 显示系统自带的下拉刷新时需要处理的业务 */
+MeScroll.prototype.onPullDownRefresh = function () {
+  this.isDownScrolling = true; // 标记下拉中
+  this.showDownLoadingCall(0); // 仍触发showLoading,因为上拉加载用到
+  this.optDown.callback && this.optDown.callback(this); // 执行回调,联网加载数据
+};
+
+/* 结束下拉刷新 */
+MeScroll.prototype.endDownScroll = function () {
+  if (this.optDown.native) {// 结束原生下拉刷新
+    this.isDownScrolling = false;
+    this.endDownScrollCall(this);
+    uni.stopPullDownRefresh();
+    return;
+  }
+  var me = this;
+  // 结束下拉刷新的方法
+  var endScroll = function endScroll() {
+    me.downHight = 0;
+    me.isDownScrolling = false;
+    me.endDownScrollCall(me);
+    if (!me.isScrollBody) {
+      me.setScrollHeight(0); // scroll-view重置滚动区域,使数据不满屏时仍可检查触发翻页
+      me.scrollTo(0, 0); // scroll-view需重置滚动条到顶部,避免startTop大于0时,对下拉刷新的影响
+    }
+  };
+  // 结束下拉刷新时的回调
+  var delay = 0;
+  if (me.optDown.beforeEndDownScroll) {
+    delay = me.optDown.beforeEndDownScroll(me); // 结束下拉刷新的延时,单位ms
+    if (me.isDownEndSuccess == null) delay = 0; // 没有执行加载中,则不延时
+  }
+  if (typeof delay === 'number' && delay > 0) {
+    setTimeout(endScroll, delay);
+  } else {
+    endScroll();
+  }
+};
+
+MeScroll.prototype.endDownScrollCall = function () {
+  this.optDown.endDownScroll && this.optDown.endDownScroll(this);
+  this.optDown.afterEndDownScroll && this.optDown.afterEndDownScroll(this);
+};
+
+/* 锁定下拉刷新:isLock=ture,null锁定;isLock=false解锁 */
+MeScroll.prototype.lockDownScroll = function (isLock) {
+  if (isLock == null) isLock = true;
+  this.optDown.isLock = isLock;
+};
+
+/* 锁定上拉加载:isLock=ture,null锁定;isLock=false解锁 */
+MeScroll.prototype.lockUpScroll = function (isLock) {
+  if (isLock == null) isLock = true;
+  this.optUp.isLock = isLock;
+};
+
+/* -------初始化上拉加载------- */
+MeScroll.prototype.initUpScroll = function () {
+  var me = this;
+  // 配置参数
+  me.optUp = me.options.up || { use: false };
+  if (!me.optUp.textColor && me.hasColor(me.optUp.bgColor)) me.optUp.textColor = "#fff"; // 当bgColor有值且textColor未设置,则textColor默认白色
+  me.extendUpScroll(me.optUp);
+
+  if (me.optUp.use === false) return; // 配置不使用上拉加载时,则不初始化上拉布局
+  me.optUp.hasNext = true; // 如果使用上拉,则默认有下一页
+  me.startNum = me.optUp.page.num + 1; // 记录page开始的页码
+
+  // 初始化完毕的回调
+  if (me.optUp.inited) {
+    setTimeout(function () {// 待主线程执行完毕再执行,避免new MeScroll未初始化,在回调获取不到mescroll的实例
+      me.optUp.inited(me);
+    }, 0);
+  }
+};
+
+/*滚动到底部的事件 (仅mescroll-body生效)*/
+MeScroll.prototype.onReachBottom = function () {
+  if (this.isScrollBody && !this.isUpScrolling) {// 只能支持下拉刷新的时候同时可以触发上拉加载,否则滚动到底部就需要上滑一点才能触发onReachBottom
+    if (!this.optUp.isLock && this.optUp.hasNext) {
+      this.triggerUpScroll();
+    }
+  }
+};
+
+/*列表滚动事件 (仅mescroll-body生效)*/
+MeScroll.prototype.onPageScroll = function (e) {
+  if (!this.isScrollBody) return;
+
+  // 更新滚动条的位置 (主要用于判断下拉刷新时,滚动条是否在顶部)
+  this.setScrollTop(e.scrollTop);
+
+  // 顶部按钮的显示隐藏
+  if (e.scrollTop >= this.optUp.toTop.offset) {
+    this.showTopBtn();
+  } else {
+    this.hideTopBtn();
+  }
+};
+
+/*列表滚动事件*/
+MeScroll.prototype.scroll = function (e, onScroll) {
+  // 更新滚动条的位置
+  this.setScrollTop(e.scrollTop);
+  // 更新滚动内容高度
+  this.setScrollHeight(e.scrollHeight);
+
+  // 向上滑还是向下滑动
+  if (this.preScrollY == null) this.preScrollY = 0;
+  this.isScrollUp = e.scrollTop - this.preScrollY > 0;
+  this.preScrollY = e.scrollTop;
+
+  // 上滑 && 检查并触发上拉
+  this.isScrollUp && this.triggerUpScroll(true);
+
+  // 顶部按钮的显示隐藏
+  if (e.scrollTop >= this.optUp.toTop.offset) {
+    this.showTopBtn();
+  } else {
+    this.hideTopBtn();
+  }
+
+  // 滑动监听
+  this.optUp.onScroll && onScroll && onScroll();
+};
+
+/* 触发上拉加载 */
+MeScroll.prototype.triggerUpScroll = function (isCheck) {
+  if (!this.isUpScrolling && this.optUp.use && this.optUp.callback) {
+    // 是否校验在底部; 默认不校验
+    if (isCheck === true) {
+      var canUp = false;
+      // 还有下一页 && 没有锁定 && 不在下拉中
+      if (this.optUp.hasNext && !this.optUp.isLock && !this.isDownScrolling) {
+        if (this.getScrollBottom() <= this.optUp.offset) {// 到底部
+          canUp = true; // 标记可上拉
+        }
+      }
+      if (canUp === false) return;
+    }
+    this.showUpScroll(); // 上拉加载中...
+    this.optUp.page.num++; // 预先加一页,如果失败则减回
+    this.isUpAutoLoad = true; // 标记上拉已经自动执行过,避免初始化时多次触发上拉回调
+    this.num = this.optUp.page.num; // 把最新的页数赋值在mescroll上,避免对page的影响
+    this.size = this.optUp.page.size; // 把最新的页码赋值在mescroll上,避免对page的影响
+    this.time = this.optUp.page.time; // 把最新的页码赋值在mescroll上,避免对page的影响
+    this.optUp.callback(this); // 执行回调,联网加载数据
+  }
+};
+
+/* 显示上拉加载中 */
+MeScroll.prototype.showUpScroll = function () {
+  this.isUpScrolling = true; // 标记上拉加载中
+  this.optUp.showLoading && this.optUp.showLoading(this); // 回调
+};
+
+/* 显示上拉无更多数据 */
+MeScroll.prototype.showNoMore = function () {
+  this.optUp.hasNext = false; // 标记无更多数据
+  this.optUp.showNoMore && this.optUp.showNoMore(this); // 回调
+};
+
+/* 隐藏上拉区域**/
+MeScroll.prototype.hideUpScroll = function () {
+  this.optUp.hideUpScroll && this.optUp.hideUpScroll(this); // 回调
+};
+
+/* 结束上拉加载 */
+MeScroll.prototype.endUpScroll = function (isShowNoMore) {
+  if (isShowNoMore != null) {// isShowNoMore=null,不处理下拉状态,下拉刷新的时候调用
+    if (isShowNoMore) {
+      this.showNoMore(); // isShowNoMore=true,显示无更多数据
+    } else {
+      this.hideUpScroll(); // isShowNoMore=false,隐藏上拉加载
+    }
+  }
+  this.isUpScrolling = false; // 标记结束上拉加载
+};
+
+/* 重置上拉加载列表为第一页
+    *isShowLoading 是否显示进度布局;
+    * 1.默认null,不传参,则显示上拉加载的进度布局
+    * 2.传参true, 则显示下拉刷新的进度布局
+    * 3.传参false,则不显示上拉和下拉的进度 (常用于静默更新列表数据)
+    */
+MeScroll.prototype.resetUpScroll = function (isShowLoading) {
+  if (this.optUp && this.optUp.use) {
+    var page = this.optUp.page;
+    this.prePageNum = page.num; // 缓存重置前的页码,加载失败可退回
+    this.prePageTime = page.time; // 缓存重置前的时间,加载失败可退回
+    page.num = this.startNum; // 重置为第一页
+    page.time = null; // 重置时间为空
+    if (!this.isDownScrolling && isShowLoading !== false) {// 如果不是下拉刷新触发的resetUpScroll并且不配置列表静默更新,则显示进度;
+      if (isShowLoading == null) {
+        this.removeEmpty(); // 移除空布局
+        this.showUpScroll(); // 不传参,默认显示上拉加载的进度布局
+      } else {
+        this.showDownScroll(); // 传true,显示下拉刷新的进度布局,不清空列表
+      }
+    }
+    this.isUpAutoLoad = true; // 标记上拉已经自动执行过,避免初始化时多次触发上拉回调
+    this.num = page.num; // 把最新的页数赋值在mescroll上,避免对page的影响
+    this.size = page.size; // 把最新的页码赋值在mescroll上,避免对page的影响
+    this.time = page.time; // 把最新的页码赋值在mescroll上,避免对page的影响
+    this.optUp.callback && this.optUp.callback(this); // 执行上拉回调
+  }
+};
+
+/* 设置page.num的值 */
+MeScroll.prototype.setPageNum = function (num) {
+  this.optUp.page.num = num - 1;
+};
+
+/* 设置page.size的值 */
+MeScroll.prototype.setPageSize = function (size) {
+  this.optUp.page.size = size;
+};
+
+/* 联网回调成功,结束下拉刷新和上拉加载
+    * dataSize: 当前页的数据量(必传)
+    * totalPage: 总页数(必传)
+    * systime: 服务器时间 (可空)
+    */
+MeScroll.prototype.endByPage = function (dataSize, totalPage, systime) {
+  var hasNext;
+  if (this.optUp.use && totalPage != null) hasNext = this.optUp.page.num < totalPage; // 是否还有下一页
+  this.endSuccess(dataSize, hasNext, systime);
+};
+
+/* 联网回调成功,结束下拉刷新和上拉加载
+    * dataSize: 当前页的数据量(必传)
+    * totalSize: 列表所有数据总数量(必传)
+    * systime: 服务器时间 (可空)
+    */
+MeScroll.prototype.endBySize = function (dataSize, totalSize, systime) {
+  var hasNext;
+  if (this.optUp.use && totalSize != null) {
+    var loadSize = (this.optUp.page.num - 1) * this.optUp.page.size + dataSize; // 已加载的数据总数
+    hasNext = loadSize < totalSize; // 是否还有下一页
+  }
+  this.endSuccess(dataSize, hasNext, systime);
+};
+
+/* 联网回调成功,结束下拉刷新和上拉加载
+    * dataSize: 当前页的数据个数(不是所有页的数据总和),用于上拉加载判断是否还有下一页.如果不传,则会判断还有下一页
+    * hasNext: 是否还有下一页,布尔类型;用来解决这个小问题:比如列表共有20条数据,每页加载10条,共2页.如果只根据dataSize判断,则需翻到第三页才会知道无更多数据,如果传了hasNext,则翻到第二页即可显示无更多数据.
+    * systime: 服务器时间(可空);用来解决这个小问题:当准备翻下一页时,数据库新增了几条记录,此时翻下一页,前面的几条数据会和上一页的重复;这里传入了systime,那么upCallback的page.time就会有值,把page.time传给服务器,让后台过滤新加入的那几条记录
+    */
+MeScroll.prototype.endSuccess = function (dataSize, hasNext, systime) {
+  var me = this;
+  // 结束下拉刷新
+  if (me.isDownScrolling) {
+    me.isDownEndSuccess = true;
+    me.endDownScroll();
+  }
+
+  // 结束上拉加载
+  if (me.optUp.use) {
+    var isShowNoMore; // 是否已无更多数据
+    if (dataSize != null) {
+      var pageNum = me.optUp.page.num; // 当前页码
+      var pageSize = me.optUp.page.size; // 每页长度
+      // 如果是第一页
+      if (pageNum === 1) {
+        if (systime) me.optUp.page.time = systime; // 设置加载列表数据第一页的时间
+      }
+      if (dataSize < pageSize || hasNext === false) {
+        // 返回的数据不满一页时,则说明已无更多数据
+        me.optUp.hasNext = false;
+        if (dataSize === 0 && pageNum === 1) {
+          // 如果第一页无任何数据且配置了空布局
+          isShowNoMore = false;
+          me.showEmpty();
+        } else {
+          // 总列表数少于配置的数量,则不显示无更多数据
+          var allDataSize = (pageNum - 1) * pageSize + dataSize;
+          if (allDataSize < me.optUp.noMoreSize) {
+            isShowNoMore = false;
+          } else {
+            isShowNoMore = true;
+          }
+          me.removeEmpty(); // 移除空布局
+        }
+      } else {
+        // 还有下一页
+        isShowNoMore = false;
+        me.optUp.hasNext = true;
+        me.removeEmpty(); // 移除空布局
+      }
+    }
+
+    // 隐藏上拉
+    me.endUpScroll(isShowNoMore);
+  }
+};
+
+/* 回调失败,结束下拉刷新和上拉加载 */
+MeScroll.prototype.endErr = function (errDistance) {
+  // 结束下拉,回调失败重置回原来的页码和时间
+  if (this.isDownScrolling) {
+    this.isDownEndSuccess = false;
+    var page = this.optUp.page;
+    if (page && this.prePageNum) {
+      page.num = this.prePageNum;
+      page.time = this.prePageTime;
+    }
+    this.endDownScroll();
+  }
+  // 结束上拉,回调失败重置回原来的页码
+  if (this.isUpScrolling) {
+    this.optUp.page.num--;
+    this.endUpScroll(false);
+    // 如果是mescroll-body,则需往回滚一定距离
+    if (this.isScrollBody && errDistance !== 0) {// 不处理0
+      if (!errDistance) errDistance = this.optUp.errDistance; // 不传,则取默认
+      this.scrollTo(this.getScrollTop() - errDistance, 0); // 往上回滚的距离
+    }
+  }
+};
+
+/* 显示空布局 */
+MeScroll.prototype.showEmpty = function () {
+  this.optUp.empty.use && this.optUp.empty.onShow && this.optUp.empty.onShow(true);
+};
+
+/* 移除空布局 */
+MeScroll.prototype.removeEmpty = function () {
+  this.optUp.empty.use && this.optUp.empty.onShow && this.optUp.empty.onShow(false);
+};
+
+/* 显示回到顶部的按钮 */
+MeScroll.prototype.showTopBtn = function () {
+  if (!this.topBtnShow) {
+    this.topBtnShow = true;
+    this.optUp.toTop.onShow && this.optUp.toTop.onShow(true);
+  }
+};
+
+/* 隐藏回到顶部的按钮 */
+MeScroll.prototype.hideTopBtn = function () {
+  if (this.topBtnShow) {
+    this.topBtnShow = false;
+    this.optUp.toTop.onShow && this.optUp.toTop.onShow(false);
+  }
+};
+
+/* 获取滚动条的位置 */
+MeScroll.prototype.getScrollTop = function () {
+  return this.scrollTop || 0;
+};
+
+/* 记录滚动条的位置 */
+MeScroll.prototype.setScrollTop = function (y) {
+  this.scrollTop = y;
+};
+
+/* 滚动到指定位置 */
+MeScroll.prototype.scrollTo = function (y, t) {
+  this.myScrollTo && this.myScrollTo(y, t); // scrollview需自定义回到顶部方法
+};
+
+/* 自定义scrollTo */
+MeScroll.prototype.resetScrollTo = function (myScrollTo) {
+  this.myScrollTo = myScrollTo;
+};
+
+/* 滚动条到底部的距离 */
+MeScroll.prototype.getScrollBottom = function () {
+  return this.getScrollHeight() - this.getClientHeight() - this.getScrollTop();
+};
+
+/* 计步器
+    star: 开始值
+    end: 结束值
+    callback(step,timer): 回调step值,计步器timer,可自行通过window.clearInterval(timer)结束计步器;
+    t: 计步时长,传0则直接回调end值;不传则默认300ms
+    rate: 周期;不传则默认30ms计步一次
+    * */
+MeScroll.prototype.getStep = function (star, end, callback, t, rate) {
+  var diff = end - star; // 差值
+  if (t === 0 || diff === 0) {
+    callback && callback(end);
+    return;
+  }
+  t = t || 300; // 时长 300ms
+  rate = rate || 30; // 周期 30ms
+  var count = t / rate; // 次数
+  var step = diff / count; // 步长
+  var i = 0; // 计数
+  var timer = setInterval(function () {
+    if (i < count - 1) {
+      star += step;
+      callback && callback(star, timer);
+      i++;
+    } else {
+      callback && callback(end, timer); // 最后一次直接设置end,避免计算误差
+      clearInterval(timer);
+    }
+  }, rate);
+};
+
+/* 滚动容器的高度 */
+MeScroll.prototype.getClientHeight = function (isReal) {
+  var h = this.clientHeight || 0;
+  if (h === 0 && isReal !== true) {// 未获取到容器的高度,可临时取body的高度 (可能会有误差)
+    h = this.getBodyHeight();
+  }
+  return h;
+};
+MeScroll.prototype.setClientHeight = function (h) {
+  this.clientHeight = h;
+};
+
+/* 滚动内容的高度 */
+MeScroll.prototype.getScrollHeight = function () {
+  return this.scrollHeight || 0;
+};
+MeScroll.prototype.setScrollHeight = function (h) {
+  this.scrollHeight = h;
+};
+
+/* body的高度 */
+MeScroll.prototype.getBodyHeight = function () {
+  return this.bodyHeight || 0;
+};
+MeScroll.prototype.setBodyHeight = function (h) {
+  this.bodyHeight = h;
+};
+
+/* 阻止浏览器默认滚动事件 */
+MeScroll.prototype.preventDefault = function (e) {
+  // 小程序不支持e.preventDefault, 已在wxs中禁止
+  // app的bounce只能通过配置pages.json的style.app-plus.bounce为"none"来禁止, 或使用renderjs禁止
+  // cancelable:是否可以被禁用; defaultPrevented:是否已经被禁用
+  if (e && e.cancelable && !e.defaultPrevented) e.preventDefault();
+};
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+
+/***/ 267:
+/*!************************************************************************************************!*\
+  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-uni-option.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 全局配置
+// mescroll-body 和 mescroll-uni 通用
+var GlobalOption = {
+  down: {
+    // 其他down的配置参数也可以写,这里只展示了常用的配置:
+    offset: 80, // 在列表顶部,下拉大于80px,松手即可触发下拉刷新的回调
+    native: false // 是否使用系统自带的下拉刷新; 默认false; 仅在mescroll-body生效 (值为true时,还需在pages配置enablePullDownRefresh:true;详请参考mescroll-native的案例)
+  },
+  up: {
+    // 其他up的配置参数也可以写,这里只展示了常用的配置:
+    offset: 150, // 距底部多远时,触发upCallback,仅mescroll-uni生效 ( mescroll-body配置的是pages.json的 onReachBottomDistance )
+    toTop: {
+      // 回到顶部按钮,需配置src才显示
+      src: "https://www.mescroll.com/img/mescroll-totop.png", // 图片路径 (建议放入static目录, 如 /static/img/mescroll-totop.png )
+      offset: 1000, // 列表滚动多少距离才显示回到顶部按钮,默认1000px
+      right: 20, // 到右边的距离, 默认20 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
+      bottom: 120, // 到底部的距离, 默认120 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
+      width: 72 // 回到顶部图标的宽度, 默认72 (支持"20rpx", "20px", "20%"格式的值, 纯数字则默认单位rpx)
+    },
+    empty: {
+      use: true, // 是否显示空布局
+      icon: "https://www.mescroll.com/img/mescroll-empty.png" // 图标路径 (建议放入static目录, 如 /static/img/mescroll-empty.png )
+    } },
+
+  // 国际化配置
+  i18n: {
+    // 中文
+    zh: {
+      down: {
+        textInOffset: '下拉刷新', // 下拉的距离在offset范围内的提示文本
+        textOutOffset: '释放更新', // 下拉的距离大于offset范围的提示文本
+        textLoading: '加载中 ...', // 加载中的提示文本
+        textSuccess: '加载成功', // 加载成功的文本
+        textErr: '加载失败' // 加载失败的文本
+      },
+      up: {
+        textLoading: '加载中 ...', // 加载中的提示文本
+        textNoMore: '-- END --', // 没有更多数据的提示文本
+        empty: {
+          tip: '~ 空空如也 ~' // 空提示
+        } } },
+
+
+    // 英文
+    en: {
+      down: {
+        textInOffset: 'drop down refresh',
+        textOutOffset: 'release updates',
+        textLoading: 'loading ...',
+        textSuccess: 'loaded successfully',
+        textErr: 'loading failed' },
+
+      up: {
+        textLoading: 'loading ...',
+        textNoMore: '-- END --',
+        empty: {
+          tip: '~ absolutely empty ~' } } } } };var _default =
+
+
+
+
+
+
+GlobalOption;exports.default = _default;
+
+/***/ }),
+
+/***/ 268:
+/*!******************************************************************************************!*\
+  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-i18n.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 国际化工具类
+var mescrollI18n = {
+  // 默认语言
+  def: "zh",
+  // 获取当前语言类型
+  getType: function getType() {
+    return uni.getStorageSync("mescroll-i18n") || this.def;
+  },
+  // 设置当前语言类型
+  setType: function setType(type) {
+    uni.setStorageSync("mescroll-i18n", type);
+  } };var _default =
+
+
+mescrollI18n;exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
+
+/***/ 269:
+/*!***************************************************************************************!*\
+  !*** E:/code/myCampus/uni_modules/mescroll-uni/components/mescroll-uni/wxs/mixins.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; // 定义在wxs (含renderjs) 逻辑层的数据和方法, 与视图层相互通信
+var WxsMixin = {
+  data: function data() {
+    return {
+      // 传入wxs视图层的数据 (响应式)
+      wxsProp: {
+        optDown: {}, // 下拉刷新的配置
+        scrollTop: 0, // 滚动条的距离
+        bodyHeight: 0, // body的高度
+        isDownScrolling: false, // 是否正在下拉刷新中
+        isUpScrolling: false, // 是否正在上拉加载中
+        isScrollBody: true, // 是否为mescroll-body滚动
+        isUpBoth: true, // 上拉加载时,是否同时可以下拉刷新
+        t: 0 // 数据更新的标记 (只有数据更新了,才会触发wxs的Observer)
+      },
+
+      // 标记调用wxs视图层的方法
+      callProp: {
+        callType: '', // 方法名
+        t: 0 // 数据更新的标记 (只有数据更新了,才会触发wxs的Observer)
+      },
+
+      // 不用wxs的平台使用此处的wxsBiz对象,抹平wxs的写法 (微信小程序和APP使用的wxsBiz对象是./wxs/wxs.wxs)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // 不用renderjs的平台使用此处的renderBiz对象,抹平renderjs的写法 (app 和 h5 使用的renderBiz对象是./wxs/renderjs.js)
+
+      renderBiz: {
+        propObserver: function propObserver() {} // 抹平renderjs的写法
+      } };
+
+
+  },
+  methods: {
+    // wxs视图层调用逻辑层的回调
+    wxsCall: function wxsCall(msg) {
+      if (msg.type === 'setWxsProp') {
+        // 更新wxsProp数据 (值改变才触发更新)
+        this.wxsProp = {
+          optDown: this.mescroll.optDown,
+          scrollTop: this.mescroll.getScrollTop(),
+          bodyHeight: this.mescroll.getBodyHeight(),
+          isDownScrolling: this.mescroll.isDownScrolling,
+          isUpScrolling: this.mescroll.isUpScrolling,
+          isUpBoth: this.mescroll.optUp.isBoth,
+          isScrollBody: this.mescroll.isScrollBody,
+          t: Date.now() };
+
+      } else if (msg.type === 'setLoadType') {
+        // 设置inOffset,outOffset的状态
+        this.downLoadType = msg.downLoadType;
+        // 状态挂载到mescroll对象, 以便在其他组件中使用, 比如<me-video>中
+        this.$set(this.mescroll, 'downLoadType', this.downLoadType);
+        // 重置是否加载成功的状态
+        this.$set(this.mescroll, 'isDownEndSuccess', null);
+      } else if (msg.type === 'triggerDownScroll') {
+        // 主动触发下拉刷新
+        this.mescroll.triggerDownScroll();
+      } else if (msg.type === 'endDownScroll') {
+        // 结束下拉刷新
+        this.mescroll.endDownScroll();
+      } else if (msg.type === 'triggerUpScroll') {
+        // 主动触发上拉加载
+        this.mescroll.triggerUpScroll(true);
+      }
+    } },
+
+  mounted: function mounted() {var _this = this;
+
+    // 配置主动触发wxs显示加载进度的回调
+    this.mescroll.optDown.afterLoading = function () {
+      _this.callProp = { callType: "showLoading", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
+    };
+    // 配置主动触发wxs隐藏加载进度的回调
+    this.mescroll.optDown.afterEndDownScroll = function () {
+      _this.callProp = { callType: "endDownScroll", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
+      var delay = 300 + (_this.mescroll.optDown.beforeEndDelay || 0);
+      setTimeout(function () {
+        if (_this.downLoadType === 4 || _this.downLoadType === 0) {
+          _this.callProp = { callType: "clearTransform", t: Date.now() }; // 触发wxs的方法 (值改变才触发更新)
+        }
+        // 状态挂载到mescroll对象, 以便在其他组件中使用, 比如<me-video>中
+        _this.$set(_this.mescroll, 'downLoadType', _this.downLoadType);
+      }, delay);
+    };
+    // 初始化wxs的数据
+    this.wxsCall({ type: 'setWxsProp' });
+
+  } };var _default =
+
+
+WxsMixin;exports.default = _default;
 
 /***/ }),
 
@@ -9884,10 +10063,10 @@ function updateChildComponent (
     // keep a copy of raw propsData
     vm.$options.propsData = propsData;
   }
-  
+
   // fixed by xxxxxx update properties(mp runtime)
   vm._$updateProperties && vm._$updateProperties(vm);
-  
+
   // update listeners
   listeners = listeners || emptyObject;
   var oldListeners = vm.$options._parentListeners;
@@ -10418,7 +10597,7 @@ function initProps (vm, propsOptions) {
             }
             //fixed by xxxxxx __next_tick_pending,uni://form-field 时不告警
             if(
-                key === 'value' && 
+                key === 'value' &&
                 Array.isArray(vm.$options.behaviors) &&
                 vm.$options.behaviors.indexOf('uni://form-field') !== -1
               ){
@@ -10430,7 +10609,7 @@ function initProps (vm, propsOptions) {
             var $parent = vm.$parent;
             while($parent){
               if($parent.__next_tick_pending){
-                return  
+                return
               }
               $parent = $parent.$parent;
             }
@@ -10758,10 +10937,10 @@ function initMixin (Vue) {
     initEvents(vm);
     initRender(vm);
     callHook(vm, 'beforeCreate');
-    !vm._$fallback && initInjections(vm); // resolve injections before data/props  
+    !vm._$fallback && initInjections(vm); // resolve injections before data/props
     initState(vm);
     !vm._$fallback && initProvide(vm); // resolve provide after data/props
-    !vm._$fallback && callHook(vm, 'created');      
+    !vm._$fallback && callHook(vm, 'created');
 
     /* istanbul ignore if */
     if ( true && config.performance && mark) {
@@ -11487,7 +11666,7 @@ function mountComponent$1(
       }
     }
   }
-  
+
   !vm._$fallback && callHook(vm, 'beforeMount');
 
   var updateComponent = function () {
@@ -11620,9 +11799,10 @@ function internalMixin(Vue) {
 
   Vue.prototype.$emit = function(event) {
     if (this.$scope && event) {
-      this.$scope['triggerEvent'](event, {
-        __args__: toArray(arguments, 1)
-      });
+      (this.$scope['_triggerEvent'] || this.$scope['triggerEvent'])
+        .call(this.$scope, event, {
+          __args__: toArray(arguments, 1)
+        })
     }
     return oldEmit.apply(this, arguments)
   };
@@ -11686,14 +11866,16 @@ function internalMixin(Vue) {
     if (!target) {
       target = this;
     }
-    target[key] = value;
+    // 解决动态属性添加
+    Vue.set(target, key, value)
   };
 
   Vue.prototype.__set_sync = function(target, key, value) {
     if (!target) {
       target = this;
     }
-    target[key] = value;
+    // 解决动态属性添加
+    Vue.set(target, key, value)
   };
 
   Vue.prototype.__get_orig = function(item) {
@@ -11826,7 +12008,7 @@ Vue.prototype.__patch__ = patch;
 // public mount method
 Vue.prototype.$mount = function(
     el ,
-    hydrating 
+    hydrating
 ) {
     return mountComponent$1(this, el, hydrating)
 };
@@ -12317,7 +12499,68 @@ function resolveLocaleChain(locale) {
 
 /***/ }),
 
-/***/ 57:
+/***/ 51:
+/*!*********************************************!*\
+  !*** E:/code/myCampus/public/api/course.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _request = _interopRequireDefault(__webpack_require__(/*! ../common/request.js */ 12));
+var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
+courseServers = /*#__PURE__*/function () {function courseServers() {_classCallCheck(this, courseServers);}_createClass(courseServers, null, [{ key: "getMyCourse",
+    // 获取所带课程
+    value: function getMyCourse() {
+      return _request.default.get('/getCourseList', {}, { 'token': true });
+    }
+    // 获取签到列表
+  }, { key: "getStudensSignList", value: function getStudensSignList() {var signId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+      if (signId) {
+        return _request.default.get('/getStudentsSignInfo', { "signId": signId }, { 'token': true });
+      }
+      return _request.default.get('/getStudentsSignInfo', {}, { 'token': true });
+    }
+    // 发布签到
+  }, { key: "createSign", value: function createSign(classId, courseId) {
+      return _request.default.post('/createSign', {
+        'class_id': classId,
+        'course_id': courseId },
+
+      { 'token': true });
+    }
+    // 教师代签等操作
+  }, { key: "teacherOptions", value: function teacherOptions(param) {
+      return _request.default.post('/teacherOptions', { 'data': param }, { 'token': true });
+    }
+    // 学生签到
+  }, { key: "studentSign", value: function studentSign(signId, teacherId, address, latitude, longitude) {
+      return _request.default.post('/studentSign',
+      {
+        'signId': signId,
+        'teacherId': teacherId,
+        'address': address,
+        'Latitude': latitude,
+        'Longitude': longitude },
+
+      { 'token': true });
+    }
+    // 获取课程表
+  }, { key: "getCourseList", value: function getCourseList() {
+      return _request.default.get('/getClassScheduleList', {}, { 'token': true });
+    }
+    // 获取作息表
+  }, { key: "getCurrentSchedule", value: function getCurrentSchedule() {
+      return _request.default.get('/getCurrentSchedule', {}, { 'token': true });
+    }
+    // 获取考勤记录
+  }, { key: "getSignList", value: function getSignList() {
+      return _request.default.get('/getSignList', {}, { 'token': true });
+    } }]);return courseServers;}();exports.default = courseServers;
+
+/***/ }),
+
+/***/ 58:
 /*!**********************************************!*\
   !*** E:/code/myCampus/public/common/time.js ***!
   \**********************************************/
@@ -12381,7 +12624,7 @@ function hToD(hours) {
 
 /***/ }),
 
-/***/ 58:
+/***/ 59:
 /*!********************************************!*\
   !*** E:/code/myCampus/public/api/leave.js ***!
   \********************************************/
@@ -12418,61 +12661,13 @@ leaveServers = /*#__PURE__*/function () {function leaveServers() {_classCallChec
       { "token": true });
     }
     // 获取销假列表
-  }, { key: "getDivideLeave", value: function getDivideLeave(page) {
+  }, { key: "getDivideLeave", value: function getDivideLeave() {var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
       return _request.default.get('/getDivideLeave', { page: page }, { "token": true });
     }
     // 销假
   }, { key: "divideLeave", value: function divideLeave(params) {
       return _request.default.post('/divideLeave', { 'data': JSON.stringify(params) }, { "token": true });
     } }]);return leaveServers;}();exports.default = leaveServers;
-
-/***/ }),
-
-/***/ 95:
-/*!*********************************************!*\
-  !*** E:/code/myCampus/public/api/course.js ***!
-  \*********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _request = _interopRequireDefault(__webpack_require__(/*! ../common/request.js */ 12));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}function _createClass(Constructor, protoProps, staticProps) {if (protoProps) _defineProperties(Constructor.prototype, protoProps);if (staticProps) _defineProperties(Constructor, staticProps);return Constructor;}var
-courseServers = /*#__PURE__*/function () {function courseServers() {_classCallCheck(this, courseServers);}_createClass(courseServers, null, [{ key: "getCourseList",
-    // 获取课程
-    value: function getCourseList() {
-      return _request.default.get('/getCourseList', {}, { 'token': true });
-    }
-    // 获取签到列表
-  }, { key: "getStudensSignList", value: function getStudensSignList() {var signId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-      if (signId) {
-        return _request.default.get('/getStudentsSignInfo', { "signId": signId }, { 'token': true });
-      }
-      return _request.default.get('/getStudentsSignInfo', {}, { 'token': true });
-    }
-    // 发布签到
-  }, { key: "createSign", value: function createSign(classId, courseId) {
-      return _request.default.post('/createSign', {
-        'class_id': classId,
-        'course_id': courseId },
-
-      { 'token': true });
-    }
-    // 教师代签等操作
-  }, { key: "teacherOptions", value: function teacherOptions(param) {
-      return _request.default.post('/teacherOptions', { 'data': param }, { 'token': true });
-    }
-    // 学生签到
-  }, { key: "studentSign", value: function studentSign(signId, teacherId, address, latitude, longitude) {
-      return _request.default.post('/studentSign',
-      {
-        'signId': signId,
-        'teacherId': teacherId,
-        'address': address,
-        'Latitude': latitude,
-        'Longitude': longitude },
-
-      { 'token': true });
-    } }]);return courseServers;}();exports.default = courseServers;
 
 /***/ }),
 
@@ -12500,7 +12695,6 @@ websocketUtil = /*#__PURE__*/function () {
     try {
       return this.connectSocketInit();
     } catch (e) {
-      console.log('catch');
       this.socket_clock = false;
       this.reconnect();
     }
@@ -12586,11 +12780,11 @@ websocketUtil = /*#__PURE__*/function () {
       if (!this.socket_clock) {
         if (this.reconnectNum > 0) {
           this.reconnectTimeOut = setTimeout( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-                    console.log('重连中 ', _this4.reconnectNum);
+
                     _this4.reconnectNum -= 1;
                     // 重连时间 5*1 6*2 7*3 8*4 9*5
-                    _this4.reconnectTiem = (10 - _this4.reconnectNum) * (6 - _this4.reconnectNum);_context.next = 5;return (
-                      _this4.connectSocketInit());case 5:case "end":return _context.stop();}}}, _callee);})),
+                    _this4.reconnectTiem = (10 - _this4.reconnectNum) * (6 - _this4.reconnectNum);_context.next = 4;return (
+                      _this4.connectSocketInit());case 4:case "end":return _context.stop();}}}, _callee);})),
           this.reconnectTiem * 1000);
         } else {
           uni.hideLoading();

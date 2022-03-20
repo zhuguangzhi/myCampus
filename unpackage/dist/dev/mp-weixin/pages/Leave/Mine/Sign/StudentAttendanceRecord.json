@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "考勤详情",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "course-sign-list": "/pages/Leave/Mine/Sign/components/courseSignList",
+    "nothing": "/components/nothing"
+  }
+}

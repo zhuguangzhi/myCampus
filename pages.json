@@ -116,6 +116,42 @@
             }
             
         }
+        ,{
+            "path" : "pages/Dynamic/CreateDynamic",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/Sign/StudentAttendanceRecord",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "考勤详情",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/DynamicCollect",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "收藏",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/Leave/Mine/mySpace/mySpace",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "我的动态",
+                "enablePullDownRefresh": false
+            }
+            
+        }
     ],
 	"tabBar": {
 		"color": "#000000",

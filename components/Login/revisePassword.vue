@@ -33,7 +33,6 @@
 				if(this.clock){
 					// 校验密码
 					[err,res]=await loginServer.checkPassword(userId,this.oldPassword);
-					console.log(res)
 					if(!this.$http.errorCheck(err,res)) {
 						this.oldPassword = ''
 						return false

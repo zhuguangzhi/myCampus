@@ -95,6 +95,7 @@
 				})
 				// 关闭下拉动画
 				this.$nextTick(()=>{
+					this.mescroll.endSuccess(data.data.length);
 					this.mescroll.endBySize(data.data.length, data.total)
 				})
 				if(data.data.length===0){

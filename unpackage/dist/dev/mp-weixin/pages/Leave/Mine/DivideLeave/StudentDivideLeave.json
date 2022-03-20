@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "nothing": "/components/nothing",
+    "face": "/components/Login/face"
+  },
+  "component": true
+}

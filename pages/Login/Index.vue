@@ -13,7 +13,7 @@
 </template>
 
 <script>
-	import  { setStorage,getStorage,showLoading,toPage }  from '@/public/common/baseFn.js'
+	import  { setStorage,getStorage,showLoading,toPage,showModel }  from '@/public/common/baseFn.js'
 	import loginServer from '@/public/api/login.js'
 	import UserConfig from '@/public/config/user.js'
 	import baseConfig from '@/public/config/BaseConfig.js'
@@ -22,10 +22,8 @@
 		name:"Login",
 		data() {
 			return {
-				// userId:null,
-				userId:'t8002056',
-				// password:null,
-				password:'123123',
+				userId:null,
+				password:null,
 				errTip:null,
 				// 人脸验证
 				checkFace:false,
@@ -72,10 +70,9 @@
 				
 				uni.hideLoading()
 				let data = loginData.data.data;
-				// this.toIndexPage(data)
-				// return false
 				// opid进行校验
-				if(data.bindInfo===false){
+				console.log('data',data)
+				if(data.bindInfo!==true){
 					// 第一次登录，要求修改密码 
 					// 将获取到的用户信息缓存在store中
 					this.$store.commit('setUserInfo',loginData.data.data)
@@ -83,9 +80,8 @@
 						'bindInfo':false
 					};
 					// 第一次登录 录入人脸
-					this.checkResult(true);
-					// this.faceType="create"
-					// this.checkFace=true;
+					this.faceType="create"
+					this.checkFace=true;
 					return false;
 				}else if(data.openId===false){
 					// 不同账号，须人脸验证
@@ -93,11 +89,11 @@
 					UserConfig.userInfo={
 						'bindInfo':false
 					};
-					// this.faceType="faceCheck"
-					// this.checkFace=true;
-					this.checkResult(true);
+					this.faceType="faceCheck"
+					this.checkFace=true;
 					return false;
 				}
+
 				// 页面跳转
 				this.toIndexPage(data)
 			},
@@ -124,13 +120,13 @@
 				this.errTip=''
 			},
 			// 页面跳转
-			toIndexPage(userInfo){
+			async toIndexPage(userInfo){
 				//存储用户信息
-				setStorage('userInfo',userInfo);
+				await setStorage('userInfo',userInfo);
 				// 重新配置缓存信息
-				UserConfig.userInfo = getStorage('userInfo')
+				UserConfig.userInfo = await  getStorage('userInfo')
 				toPage('/pages/TimeTable/TimeTable','switchTab');
-				// toPage('/pages/Leave/Mine/Sign/createSign')
+				// toPage('/pages/Dynamic/CreateDynamic')
 			},
 			checkResult(res){
 				if(res){
@@ -139,7 +135,7 @@
 				}
 				this.checkFace=false;
 				
-			}
+			},
 		},
 		
 	}

@@ -78,7 +78,6 @@ const getreverseGeocode =function(longitude,latitude,that) {
 			// 获取省名+市名
 			let str = data[0].regeocodeData.addressComponent.province + data[0].regeocodeData.addressComponent.city
 			let address = data[0].regeocodeData.formatted_address
-			console.log(data[0])
 			address = address.replace(str,'')
 			that.address = address;
 		},
@@ -100,6 +99,17 @@ const showModel = async function(content){
 	}
 	return await uni.showModal(options)
 }
+const previewImage=function(index, imgList) {
+	// 图片预览
+	uni.previewImage({
+		urls: imgList,
+		current: imgList[index],
+		longPressActions: {
+			itemList: ['保存图片'],
+		}
+	});
+
+}
 export  {
 	 message,
 	 setStorage,
@@ -109,5 +119,6 @@ export  {
 	 toPage,
 	 delStorage,
 	 getreverseGeocode,
-	 showModel
+	 showModel,
+	 previewImage
 }

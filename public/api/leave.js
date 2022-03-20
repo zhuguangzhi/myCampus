@@ -27,7 +27,7 @@ export default class leaveServers {
 		},{"token":true})
 	}
 	// 获取销假列表
-	static getDivideLeave(page) {
+	static getDivideLeave(page=1) {
 		return Request.get('/getDivideLeave',{page},{"token":true})
 	}
 	// 销假

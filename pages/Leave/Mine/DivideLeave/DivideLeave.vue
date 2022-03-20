@@ -1,8 +1,6 @@
 <template>
 	<view>
-		<view v-if="!userInfo.isTeacher" class="studens">
-			
-		</view>
+		<StudentDivideLeave :leaveList.sync="leaveList" :userId="userInfo.userId" v-if="!userInfo.isTeacher" />
 		<LeaveList
 			v-else
 			ref="LeaveList"
@@ -23,9 +21,11 @@
 	import leaveServer from '@/public/api/leave.js'
 	import {showLoading,message} from '@/public/common/baseFn.js'
 	import {hToD} from '@/public/common/time.js'
+	import StudentDivideLeave from './StudentDivideLeave.vue'
 	export default {
 		components:{
-			LeaveList
+			LeaveList,
+			StudentDivideLeave
 		},
 		data() {
 			return {
@@ -46,20 +46,25 @@
 				uni.hideLoading();
 				if(!this.$http.errorCheck(err,res)) return false;
 				let data = res.data.data;
-				if(data.data==null){
-					return false;
+				if(this.userInfo.isTeacher){
+					if(data.data==null){
+						return false;
+					}
+					data.data.forEach((item)=>{
+						// 添加radio属性
+						item['radio'] = false
+						// 将后台传递的小时数转年月日时
+						item.leave_time = hToD(item.leave_time);
+						this.leaveList.push(item)
+					})
+					this.$nextTick(()=>{
+						this.$refs.LeaveList.close(data.data.length, data.total)
+					})
+				}else {
+					console.log(data)
+					this.leaveList = data
 				}
-				data.data.forEach((item)=>{
-					// 添加radio属性
-					item['radio'] = false
-					// 将后台传递的小时数转年月日时
-					item.leave_time = hToD(item.leave_time);
-					this.leaveList.push(item)
-				})
 				
-				this.$nextTick(()=>{
-					this.$refs.LeaveList.close(data.data.length, data.total)
-				})
 			},
 			// 下拉刷新
 			async refresh(){

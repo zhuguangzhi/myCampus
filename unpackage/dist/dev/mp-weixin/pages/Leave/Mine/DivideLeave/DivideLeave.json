@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "销假",
   "usingComponents": {
-    "leave-list": "/pages/Leave/component/teacher/leaveList"
+    "leave-list": "/pages/Leave/component/teacher/leaveList",
+    "student-divide-leave": "/pages/Leave/Mine/DivideLeave/StudentDivideLeave"
   }
 }

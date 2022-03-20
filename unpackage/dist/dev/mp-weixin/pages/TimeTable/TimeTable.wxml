@@ -1,1 +1,1 @@
-<view>TimeTable</view>
+<timetable vue-id="fe1c4d08-1" timetableType="{{timetableType}}" bind:__l="__l"></timetable>

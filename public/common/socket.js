@@ -14,7 +14,6 @@ class websocketUtil {
 		try {
 			return this.connectSocketInit()
 		} catch (e) {
-			console.log('catch');
 			this.socket_clock = false
 			this.reconnect();
 		}
@@ -100,7 +99,7 @@ class websocketUtil {
 		if(!this.socket_clock ){
 			if(this.reconnectNum>0){
 				this.reconnectTimeOut = setTimeout(async ()=>{
-					console.log('重连中 ',this.reconnectNum)
+				
 					this.reconnectNum -=1
 					// 重连时间 5*1 6*2 7*3 8*4 9*5
 					this.reconnectTiem = (10 - this.reconnectNum) * (6 - this.reconnectNum)

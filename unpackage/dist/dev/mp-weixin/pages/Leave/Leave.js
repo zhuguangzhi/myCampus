@@ -130,8 +130,7 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
-
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));
 
 
 
@@ -185,64 +184,97 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));
 var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));
-var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };} //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-var _default = { name: 'Leave', created: function created() {this.userInfo = _user.default.userInfo;}, data: function data() {return { userInfo: null, defaultPhoto: _BaseConfig.default.staticUrl + '/image/defaultPhoto.jpeg', severList: ['请假信息', '考勤记录', '动态收藏', '动态历史', '我的消息'] };}, computed: { computedIdentity: function computedIdentity() {if (this.userInfo.isTeacher) {return '教师';} else {return '学生';}} }, methods: { // 选择服务
-    choiceServers: function choiceServers(index) {var page;switch (index) {case 0:page = 'LeaveInfo';break;case 3:page = 'Sign';break;default:return false;}(0, _baseFn.toPage)("/pages/Leave/Mine/".concat(page));}, // 页面跳转
-    routePush: function routePush(index) {var route = [];if (this.userInfo.isTeacher) {// 教师端
-        route = ['searchLeaveApply', 'DivideLeave/DivideLeave', 'Sign/createSign'];} else {// 学生端
-        route = ['toLeave', 'DivideLeave/DivideLeave', 'Sign/studentSign'];}(0, _baseFn.toPage)("/pages/Leave/Mine/".concat(route[index - 1]));
+var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);
+var _login = _interopRequireDefault(__webpack_require__(/*! @/public/api/login.js */ 20));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var _default =
+{
+  name: 'Leave',
+  created: function created() {
+    this.userInfo = _user.default.userInfo;
+
+  },
+  data: function data() {
+    return {
+      userInfo: null,
+      severList: [
+      '请假信息',
+      '考勤记录',
+      '动态收藏'] };
+
+
+  },
+  computed: {
+    computedIdentity: function computedIdentity() {
+      if (this.userInfo.isTeacher) {
+        return '教师';
+      } else {
+        return '学生';
+      }
+    } },
+
+  methods: {
+    // 选择服务
+    choiceServers: function choiceServers(index) {
+      var page;
+      switch (index) {
+        case 0:
+          page = 'LeaveInfo';
+          break;
+        case 1:
+          // 考勤
+          if (this.userInfo.isTeacher) {
+            // 老师
+          } else {
+            // 学生
+            page = 'Sign/StudentAttendanceRecord';
+          }
+          break;
+        case 2:
+          page = 'DynamicCollect?type=dynamicCollect';
+          break;
+        default:
+          return false;}
+
+      (0, _baseFn.toPage)("/pages/Leave/Mine/".concat(page));
+
+    },
+    // 页面跳转
+    routePush: function routePush(index) {
+      var route = [];
+      if (this.userInfo.isTeacher) {
+        // 教师端
+        route = ['searchLeaveApply', 'DivideLeave/DivideLeave', 'Sign/createSign'];
+      } else {
+        // 学生端
+        route = ['toLeave', 'DivideLeave/DivideLeave', 'Sign/studentSign'];
+      }
+      (0, _baseFn.toPage)("/pages/Leave/Mine/".concat(route[index - 1]));
+    },
+    // 更改头像
+    changePhoto: function changePhoto() {var _this = this;
+      uni.showModal({
+        title: '更改头像',
+        content: '将微信头像用作于该小程序',
+        showCancel: false,
+        success: function success(res) {
+          uni.hideLoading();
+          uni.getUserProfile({
+            desc: '获取头像',
+            success: function () {var _success = _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee(e) {var _yield$loginServe$cha, _yield$loginServe$cha2, err, res;return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+                        _this.userInfo.avatarUrl = e.userInfo.avatarUrl;_context.next = 3;return (
+                          _login.default.changePhoto(e.userInfo.avatarUrl));case 3:_yield$loginServe$cha = _context.sent;_yield$loginServe$cha2 = _slicedToArray(_yield$loginServe$cha, 2);err = _yield$loginServe$cha2[0];res = _yield$loginServe$cha2[1];
+                        _this.$http.errorCheck(err, res);case 8:case "end":return _context.stop();}}}, _callee);}));function success(_x) {return _success.apply(this, arguments);}return success;}() });
+
+
+        } });
+
+
+    },
+    // 个人空间
+    mySpace: function mySpace() {
+      console.log('----');
+      (0, _baseFn.toPage)('/pages/Leave/Mine/mySpace/mySpace');
     } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
 

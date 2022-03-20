@@ -148,16 +148,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
 var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));
 
-var _leave = _interopRequireDefault(__webpack_require__(/*! @/public/api/leave.js */ 58));
+var _leave = _interopRequireDefault(__webpack_require__(/*! @/public/api/leave.js */ 59));
 var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);
-var _time = __webpack_require__(/*! @/public/common/time.js */ 57);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _createForOfIteratorHelper(o, allowArrayLike) {var it;if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {if (it) o = it;var i = 0;var F = function F() {};return { s: F, n: function n() {if (i >= o.length) return { done: true };return { done: false, value: o[i++] };}, e: function e(_e2) {throw _e2;}, f: F };}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}var normalCompletion = true,didErr = false,err;return { s: function s() {it = o[Symbol.iterator]();}, n: function n() {var step = it.next();normalCompletion = step.done;return step;}, e: function e(_e3) {didErr = true;err = _e3;}, f: function f() {try {if (!normalCompletion && it.return != null) it.return();} finally {if (didErr) throw err;}} };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var LeaveList = function LeaveList() {__webpack_require__.e(/*! require.ensure | pages/Leave/component/teacher/leaveList */ "pages/Leave/component/teacher/leaveList").then((function () {return resolve(__webpack_require__(/*! ../../component/teacher/leaveList.vue */ 189));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
+var _time = __webpack_require__(/*! @/public/common/time.js */ 58);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _createForOfIteratorHelper(o, allowArrayLike) {var it;if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {if (it) o = it;var i = 0;var F = function F() {};return { s: F, n: function n() {if (i >= o.length) return { done: true };return { done: false, value: o[i++] };}, e: function e(_e2) {throw _e2;}, f: F };}throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}var normalCompletion = true,didErr = false,err;return { s: function s() {it = o[Symbol.iterator]();}, n: function n() {var step = it.next();normalCompletion = step.done;return step;}, e: function e(_e3) {didErr = true;err = _e3;}, f: function f() {try {if (!normalCompletion && it.return != null) it.return();} finally {if (didErr) throw err;}} };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var LeaveList = function LeaveList() {__webpack_require__.e(/*! require.ensure | pages/Leave/component/teacher/leaveList */ "pages/Leave/component/teacher/leaveList").then((function () {return resolve(__webpack_require__(/*! ../../component/teacher/leaveList.vue */ 225));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var StudentDivideLeave = function StudentDivideLeave() {__webpack_require__.e(/*! require.ensure | pages/Leave/Mine/DivideLeave/StudentDivideLeave */ "pages/Leave/Mine/DivideLeave/StudentDivideLeave").then((function () {return resolve(__webpack_require__(/*! ./StudentDivideLeave.vue */ 232));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
+
 {
   components: {
-    LeaveList: LeaveList },
+    LeaveList: LeaveList,
+    StudentDivideLeave: StudentDivideLeave },
 
   data: function data() {
     return {
@@ -177,9 +177,10 @@ var _time = __webpack_require__(/*! @/public/common/time.js */ 57);function _int
                   _leave.default.getDivideLeave(_this.currentPage));case 3:_yield$leaveServer$ge = _context.sent;_yield$leaveServer$ge2 = _slicedToArray(_yield$leaveServer$ge, 2);err = _yield$leaveServer$ge2[0];res = _yield$leaveServer$ge2[1];
                 uni.hideLoading();if (
                 _this.$http.errorCheck(err, res)) {_context.next = 10;break;}return _context.abrupt("return", false);case 10:
-                data = res.data.data;if (!(
-                data.data == null)) {_context.next = 13;break;}return _context.abrupt("return",
-                false);case 13:
+                data = res.data.data;if (!
+                _this.userInfo.isTeacher) {_context.next = 18;break;}if (!(
+                data.data == null)) {_context.next = 14;break;}return _context.abrupt("return",
+                false);case 14:
 
                 data.data.forEach(function (item) {
                   // 添加radio属性
@@ -188,10 +189,14 @@ var _time = __webpack_require__(/*! @/public/common/time.js */ 57);function _int
                   item.leave_time = (0, _time.hToD)(item.leave_time);
                   _this.leaveList.push(item);
                 });
-
                 _this.$nextTick(function () {
                   _this.$refs.LeaveList.close(data.data.length, data.total);
-                });case 15:case "end":return _context.stop();}}}, _callee);}))();
+                });_context.next = 20;break;case 18:
+
+                console.log(data);
+                _this.leaveList = data;case 20:case "end":return _context.stop();}}}, _callee);}))();
+
+
     },
     // 下拉刷新
     refresh: function refresh() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:

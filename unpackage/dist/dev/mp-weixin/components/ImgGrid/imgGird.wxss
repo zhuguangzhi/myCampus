@@ -1,0 +1,44 @@
+.imgGird {
+  position: relative;
+}
+image {
+  margin-top: 5rpx;
+}
+.viedo {
+  width: 100%;
+}
+.grid-item-style {
+  position: relative;
+  margin: 0 3rpx;
+  overflow: hidden;
+}
+.hiddenImg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 219.3rpx;
+  width: calc(100%/3 - 8rpx);
+  margin-right: 8rpx;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  text-align: center;
+  line-height: 219.3rpx;
+  font-size: 50rpx;
+  z-index: 3;
+}
+.iconX {
+  position: absolute;
+  display: block;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.7);
+  width: 20px;
+  height: 20px;
+  top: 4rpx;
+  right: 0px;
+  text-align: center;
+  line-height: 16px;
+  border-radius: 0 0 0 7px;
+  font-size: 12px;
+  z-index: 2;
+}
+

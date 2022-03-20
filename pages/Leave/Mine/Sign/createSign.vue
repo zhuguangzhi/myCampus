@@ -123,10 +123,10 @@
 			},
 			// 获取课程列表
 			async getCourseList(){
-				let [err,res] = await courseServers.getCourseList();
+				let [err,res] = await courseServers.getMyCourse();
 				if(!this.$http.errorCheck(err,res)) return false;
 				this.courseList = res.data.data
-				console.log(res.data.data)
+				console.log( res.data.data)
 				this.getSignInfo()
 			},
 			// 切换当前课程
@@ -140,7 +140,6 @@
 				uni.hideLoading();
 				if (!this.$http.errorCheck(err,res)) return false;
 				this.signList = res.data.data;
-				console.log('------',this.signList);
 			},
 			// 展开扩展框
 			showExtend(ref,index){
@@ -182,7 +181,6 @@
 						is_teacher_options:1,
 						
 					};
-					console.log(param)
 					let [err,res] = await courseServers.teacherOptions(JSON.stringify(param));
 					uni.hideLoading()
 					if(!this.$http.errorCheck(err,res)) return false;
@@ -213,7 +211,6 @@
 						case 'leaveEarly':
 							signList={
 								'leave':0,
-								'late':0,
 								'leave_early':1
 							}
 							break;

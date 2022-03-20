@@ -38,7 +38,6 @@
 				let userInfo = UserConfig.userInfo;
 				data.leave_time = hToD(data.leave_time);
 				this.leaveInfo = data;
-				console.log(data)
 				uni.hideLoading();
 			},
 			

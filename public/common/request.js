@@ -38,6 +38,12 @@ export default{
 		options.method = 'POST';
 		return this.request(options);
 	},
+	delete(url,data={},options={}){
+		options.url = url;
+		options.data = data;
+		options.method = 'DELETE';
+		return this.request(options);
+	},
 	// 错误处理
 	errorCheck(err,res,errfun = false,resfun = false){
 		if (err) {
@@ -47,6 +53,7 @@ export default{
 		}
 		else if (res.data.errorCode) {
 			typeof errfun === 'function' && resfun();
+			console.log(res.data,'----------')
 			// 判断是否是登录失败
 			if(res.data.errorCode === 40003){
 				uni.showToast({ title: '登录已失效,2秒后跳至登录页',icon:"none" });
@@ -73,16 +80,16 @@ export default{
 	},
 	
 	// 上传
-	upload(url,options ={}){
-		options.url=this.config.baseUrl+url;
+	uploadImage(options ={}){
+		options.url=this.config.baseUrl+'/uploadImage';
 		options.header = options.header || this.config.header;
-		options.fileType = options.fileType || 'image';
+		options.fileType = options.fileType || 'multipart/form-data';
 		options.formData = options.formData || {};
 		options.filePath = options.filePath;
-		options.data = options.data || {};
-		if(options.token){
-			options.header.token = User.userInfo.token;
-		}
+		options.formData = options.data || {};
+		options.formData['userId'] =  User.userInfo.userId;
+		options.header.token = User.userInfo.token;
+		console.log(options)
 		return uni.uploadFile(options);
 	}
 }

@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uni-grid": "/components/ImgGrid/uni-grid",
+    "uni-grid-item": "/components/ImgGrid/uni-grid-item"
+  }
+}

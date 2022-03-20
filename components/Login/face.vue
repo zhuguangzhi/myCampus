@@ -56,7 +56,6 @@
 			async faceApi(){
 				let err=null;
 				let res=null;
-				console.log(this.face);
 				switch(this.face){
 					case 'create':
 						[err,res] = await faceSrevers.createFace({'image':this.imgBase64,'userId':this.userId})

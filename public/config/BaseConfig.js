@@ -1,6 +1,6 @@
 export default {
 	webUrl:'https://mycampus.xiaopang.cool/api/v1',
-	staticUrl:'https://mycampus.xiaopang.cool/static',
+	staticUrl:'https://mycampus.xiaopang.cool/',
 	websocketUrl:'wss://mycampus.xiaopang.cool/wss',
 	storageRoot:'myCampus',
 	// 高德

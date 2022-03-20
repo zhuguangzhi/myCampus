@@ -148,16 +148,14 @@ __webpack_require__.r(__webpack_exports__);
 var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);
 var _login = _interopRequireDefault(__webpack_require__(/*! @/public/api/login.js */ 20));
 var _user = _interopRequireDefault(__webpack_require__(/*! @/public/config/user.js */ 14));
-var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var Face = function Face() {Promise.all(/*! require.ensure | components/Login/face */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/Login/face")]).then((function () {return resolve(__webpack_require__(/*! @/components/Login/face.vue */ 124));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
+var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config/BaseConfig.js */ 13));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var Face = function Face() {Promise.all(/*! require.ensure | components/Login/face */[__webpack_require__.e("common/vendor"), __webpack_require__.e("components/Login/face")]).then((function () {return resolve(__webpack_require__(/*! @/components/Login/face.vue */ 153));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
 
 {
   name: "Login",
   data: function data() {
     return {
-      // userId:null,
-      userId: 't8002056',
-      // password:null,
-      password: '123123',
+      userId: null,
+      password: null,
       errTip: null,
       // 人脸验证
       checkFace: false,
@@ -204,10 +202,9 @@ var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config
 
                 uni.hideLoading();
                 data = loginData.data.data;
-                // this.toIndexPage(data)
-                // return false
                 // opid进行校验
-                if (!(data.bindInfo === false)) {_context2.next = 26;break;}
+                console.log('data', data);if (!(
+                data.bindInfo !== true)) {_context2.next = 28;break;}
                 // 第一次登录，要求修改密码 
                 // 将获取到的用户信息缓存在store中
                 _this2.$store.commit('setUserInfo', loginData.data.data);
@@ -215,23 +212,22 @@ var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config
                   'bindInfo': false };
 
                 // 第一次登录 录入人脸
-                _this2.checkResult(true);
-                // this.faceType="create"
-                // this.checkFace=true;
-                return _context2.abrupt("return", false);case 26:if (!(
-                data.openId === false)) {_context2.next = 31;break;}
+                _this2.faceType = "create";
+                _this2.checkFace = true;return _context2.abrupt("return",
+                false);case 28:if (!(
+                data.openId === false)) {_context2.next = 34;break;}
                 // 不同账号，须人脸验证
                 _this2.$store.commit('setUserInfo', loginData.data.data);
                 _user.default.userInfo = {
                   'bindInfo': false };
 
-                // this.faceType="faceCheck"
-                // this.checkFace=true;
-                _this2.checkResult(true);return _context2.abrupt("return",
-                false);case 31:
+                _this2.faceType = "faceCheck";
+                _this2.checkFace = true;return _context2.abrupt("return",
+                false);case 34:
+
 
                 // 页面跳转
-                _this2.toIndexPage(data);case 32:case "end":return _context2.stop();}}}, _callee2);}))();
+                _this2.toIndexPage(data);case 35:case "end":return _context2.stop();}}}, _callee2);}))();
     },
     requestSubscibe: function requestSubscibe() {var _this3 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:if (!(
                 _this3.userId[0] !== 't')) {_context3.next = 3;break;}
@@ -256,14 +252,14 @@ var _BaseConfig = _interopRequireDefault(__webpack_require__(/*! @/public/config
       this.errTip = '';
     },
     // 页面跳转
-    toIndexPage: function toIndexPage(userInfo) {
-      //存储用户信息
-      (0, _baseFn.setStorage)('userInfo', userInfo);
-      // 重新配置缓存信息
-      _user.default.userInfo = (0, _baseFn.getStorage)('userInfo');
-      (0, _baseFn.toPage)('/pages/TimeTable/TimeTable', 'switchTab');
-      // toPage('/pages/Leave/Mine/Sign/createSign')
-    },
+    toIndexPage: function toIndexPage(userInfo) {return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee4() {return _regenerator.default.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:_context4.next = 2;return (
+
+                  (0, _baseFn.setStorage)('userInfo', userInfo));case 2:_context4.next = 4;return (
+
+                  (0, _baseFn.getStorage)('userInfo'));case 4:_user.default.userInfo = _context4.sent;
+                (0, _baseFn.toPage)('/pages/TimeTable/TimeTable', 'switchTab');
+                // toPage('/pages/Dynamic/CreateDynamic')
+              case 6:case "end":return _context4.stop();}}}, _callee4);}))();},
     checkResult: function checkResult(res) {
       if (res) {
         // 通过, 去往确认页

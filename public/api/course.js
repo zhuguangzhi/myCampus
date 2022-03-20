@@ -1,7 +1,8 @@
 import Request from '../common/request.js'
+import userConfig from '@/public/config/user.js';
 export default class courseServers {
-	// 获取课程
-	static getCourseList(){
+	// 获取所带课程
+	static getMyCourse(){
 		return Request.get('/getCourseList',{},{'token':true})
 	}
 	// 获取签到列表
@@ -34,5 +35,17 @@ export default class courseServers {
 				'Longitude':longitude
 			},
 		{'token':true})
+	}
+	// 获取课程表
+	static getCourseList(){
+		return Request.get('/getClassScheduleList',{},{'token':true})
+	}
+	// 获取作息表
+	static getCurrentSchedule(){
+		return Request.get('/getCurrentSchedule',{},{'token':true})
+	}
+	// 获取考勤记录
+	static getSignList(){
+		return Request.get('/getSignList',{},{'token':true})
 	}
 }

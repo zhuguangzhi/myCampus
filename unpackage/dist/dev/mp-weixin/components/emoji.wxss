@@ -1,0 +1,25 @@
+.emojiStyle.data-v-1b5b0dca {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #FFFFFF;
+  z-index: 2;
+}
+.emojiStyle view.data-v-1b5b0dca {
+  display: flex;
+  justify-content: space-evenly;
+}
+.emojiStyle view image.data-v-1b5b0dca {
+  padding: 20rpx 0;
+  width: 60rpx;
+  height: 60rpx;
+}
+.openEmoji.data-v-1b5b0dca {
+  height: 500rpx;
+  transition: 0.15s linear;
+}
+.closeEmoji.data-v-1b5b0dca {
+  height: 0;
+  transition: 0.15s linear;
+}
+

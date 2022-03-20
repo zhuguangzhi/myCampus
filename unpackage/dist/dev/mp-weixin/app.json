@@ -12,7 +12,11 @@
         "pages/Leave/Mine/Sign/studentSign",
         "pages/Leave/Mine/Sign/createSign",
         "pages/Leave/Mine/searchLeaveApply",
-        "pages/Leave/Mine/DivideLeave/DivideLeave"
+        "pages/Leave/Mine/DivideLeave/DivideLeave",
+        "pages/Dynamic/CreateDynamic",
+        "pages/Leave/Mine/Sign/StudentAttendanceRecord",
+        "pages/Leave/Mine/DynamicCollect",
+        "pages/Leave/Mine/mySpace/mySpace"
     ],
     "subPackages": [],
     "window": {

@@ -81,7 +81,6 @@
 				upOption:{
 					use:this.useDownRefresh,
 					auto:false,
-					isBounce:true,
 					page:{num:this.currentPage,size:10},
 					isBounce:true,
 				},
@@ -145,7 +144,10 @@
 				this.$emit('update:leaveList',this.leaveList)
 			},
 			close(dataSize, totalSize){
-				this.mescroll.endBySize(dataSize, totalSize);
+				if(dataSize && totalSize){
+					this.mescroll.endSuccess(dataSize);		
+					this.mescroll.endBySize(dataSize, totalSize);
+				}
 			}
 		}
 	}

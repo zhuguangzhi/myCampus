@@ -128,20 +128,50 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; //
-//
-//
-//
-//
-//
-var _default =
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 16));
+
+
+
+
+
+var _course = _interopRequireDefault(__webpack_require__(/*! @/public/api/course.js */ 51));
+var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function _slicedToArray(arr, i) {return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();}function _nonIterableRest() {throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");}function _unsupportedIterableToArray(o, minLen) {if (!o) return;if (typeof o === "string") return _arrayLikeToArray(o, minLen);var n = Object.prototype.toString.call(o).slice(8, -1);if (n === "Object" && o.constructor) n = o.constructor.name;if (n === "Map" || n === "Set") return Array.from(o);if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);}function _arrayLikeToArray(arr, len) {if (len == null || len > arr.length) len = arr.length;for (var i = 0, arr2 = new Array(len); i < len; i++) {arr2[i] = arr[i];}return arr2;}function _iterableToArrayLimit(arr, i) {if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i["return"] != null) _i["return"]();} finally {if (_d) throw _e;}}return _arr;}function _arrayWithHoles(arr) {if (Array.isArray(arr)) return arr;}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};}var Timetable = function Timetable() {__webpack_require__.e(/*! require.ensure | components/uniapp/lpx-timetable/lpx-timetable */ "components/uniapp/lpx-timetable/lpx-timetable").then((function () {return resolve(__webpack_require__(/*! @/components/uniapp/lpx-timetable/lpx-timetable */ 168));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
 {
   name: 'TimeTable',
+  components: {
+    Timetable: Timetable },
+
   data: function data() {
-    return {};
+    return {
+      timetableType: [] };
+
+  },
+  created: function created() {var _this = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee2() {var timetableType;return _regenerator.default.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+              timetableType = (0, _baseFn.getStorage)('timetableType');if (!(
+              timetableType != null)) {_context2.next = 6;break;}
+
+              _this.timetableType = timetableType;
+              _this.$nextTick( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee() {return _regenerator.default.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
+
+                          _this.getCurrentSchedule());case 2:_this.timetableType = _context.sent;case 3:case "end":return _context.stop();}}}, _callee);})));_context2.next = 10;break;case 6:
 
 
-  } };exports.default = _default;
+              (0, _baseFn.showLoading)();_context2.next = 9;return (
+                _this.getCurrentSchedule());case 9:_this.timetableType = _context2.sent;case 10:case "end":return _context2.stop();}}}, _callee2);}))();
+
+  },
+  methods: {
+    // 获取作息表
+    getCurrentSchedule: function getCurrentSchedule() {var _this2 = this;return _asyncToGenerator( /*#__PURE__*/_regenerator.default.mark(function _callee3() {var _yield$CourseServer$g, _yield$CourseServer$g2, err, res;return _regenerator.default.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:_context3.next = 2;return (
+                  _course.default.getCurrentSchedule());case 2:_yield$CourseServer$g = _context3.sent;_yield$CourseServer$g2 = _slicedToArray(_yield$CourseServer$g, 2);err = _yield$CourseServer$g2[0];res = _yield$CourseServer$g2[1];
+                uni.hideLoading();if (
+                _this2.$http.errorCheck(err, res)) {_context3.next = 9;break;}return _context3.abrupt("return",
+                false);case 9:
+
+                (0, _baseFn.setStorage)('timetableType', res.data.data);return _context3.abrupt("return",
+                res.data.data);case 11:case "end":return _context3.stop();}}}, _callee3);}))();
+    } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ })
 

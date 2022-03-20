@@ -128,19 +128,33 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; //
-//
-//
-//
-//
-//
-var _default =
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;
+
+
+
+
+
+var _baseFn = __webpack_require__(/*! @/public/common/baseFn.js */ 15);var dynamic = function dynamic() {Promise.all(/*! require.ensure | pages/Dynamic/commponents/dynamicBox */[__webpack_require__.e("common/vendor"), __webpack_require__.e("pages/Dynamic/commponents/dynamicBox")]).then((function () {return resolve(__webpack_require__(/*! ./commponents/dynamicBox.vue */ 161));}).bind(null, __webpack_require__)).catch(__webpack_require__.oe);};var _default =
 {
-  name: 'Dynamic',
+  components: {
+    dynamic: dynamic },
+
   data: function data() {
-    return {};
+    return {
+      tabClick: false };
 
-
+  },
+  onTabItemTap: function onTabItemTap(e) {var _this = this;
+    this.$nextTick(function () {
+      if (_this.tabClick) {
+        // 200ms 内再次点击
+        (0, _baseFn.toPage)('/pages/Dynamic/CreateDynamic');
+      }
+      _this.tabClick = true;
+      setTimeout(function () {
+        _this.tabClick = false; // 200ms 内没有第二次点击，就当作单击
+      }, 200);
+    });
   } };exports.default = _default;
 
 /***/ })

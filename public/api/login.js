@@ -31,4 +31,8 @@ export default class loginServe {
 	static revisePassword(userId,password){
 		return Request.post('/revisePassword',{userId,password})
 	}
+	//    修改头像
+	static changePhoto(avatarUrl){
+		return Request.post('/changePhoto',{'avatarUrl':avatarUrl},{'token':true})
+	}
 }

@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "课表",
   "enablePullDownRefresh": false,
-  "usingComponents": {}
+  "usingComponents": {
+    "timetable": "/components/uniapp/lpx-timetable/lpx-timetable"
+  }
 }
